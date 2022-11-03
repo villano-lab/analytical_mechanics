@@ -1,0 +1,185 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      6150,        177]
+NotebookOptionsPosition[      4526,        141]
+NotebookOutlinePosition[      4920,        157]
+CellTagsIndexPosition[      4877,        154]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["\<\
+Cross Section Dimensionality
+\
+\>", "Section",
+ CellChangeTimes->{{3.876492715729385*^9, 
+  3.876492772880301*^9}},ExpressionUUID->"de0a1b75-284d-4370-a665-\
+046d2deca768"],
+
+Cell[TextData[{
+ "I\[CloseCurlyQuote]m going to do things in SI units here, even though for \
+nuclear physics that\[CloseCurlyQuote]s not the best set of units (natural \
+units are). But the concepts are the same. First step is to get the reduced \
+mass of an \[Alpha] ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox[" ", "235"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "4e00cb43-11e1-42d2-b49c-a65ffaa80a21"],
+ "U system. "
+}], "Text",
+ CellChangeTimes->{{3.8764928018987103`*^9, 
+  3.876492953149865*^9}},ExpressionUUID->"0c227674-d287-452b-a687-\
+caf2fb485956"],
+
+Cell[BoxData[
+ RowBox[{"<<", "Notation`"}]], "Input",
+ CellChangeTimes->{{3.8764930070856857`*^9, 3.876493011284747*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"bae0e4f4-bb6a-4e40-8275-698d7581de19"],
+
+Cell[BoxData[
+ RowBox[{"Symbolize", "[", 
+  TemplateBox[{
+    SubscriptBox["m", "\[Alpha]"]},
+   "NotationTemplateTag"], "]"}]], "Input",
+ CellChangeTimes->{{3.876492976234693*^9, 3.876492985967587*^9}},
+ CellLabel->"In[2]:=",ExpressionUUID->"fd534f2b-8b15-4c48-9223-4181f6fe54cb"],
+
+Cell[BoxData[
+ RowBox[{"Symbolize", "[", 
+  TemplateBox[{
+    SubscriptBox["m", "U"]},
+   "NotationTemplateTag"], "]"}]], "Input",
+ CellChangeTimes->{{3.87649306046161*^9, 3.876493063690176*^9}},
+ CellLabel->"In[3]:=",ExpressionUUID->"7f20dbb7-872d-48c1-994d-b259a115e608"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox["m", "\[Alpha]"], " ", "=", " ", 
+  RowBox[{"Quantity", "[", 
+   RowBox[{"6.64*^-27", ",", "\"\<Kilograms\>\""}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.8764930684738607`*^9, 3.87649311977109*^9}},
+ CellLabel->"In[4]:=",ExpressionUUID->"de7a41df-d8c5-46f4-b340-4c357310ff0c"],
+
+Cell[BoxData[
+ TemplateBox[{"6.64`*^-27", "\"kg\"", "kilograms", "\"Kilograms\""},
+  "Quantity"]], "Output",
+ CellChangeTimes->{3.8764931212549973`*^9},
+ CellLabel->"Out[4]=",ExpressionUUID->"89389da2-7d45-4e5d-a044-bb45ccb9032a"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"u", " ", "=", " ", 
+  RowBox[{"Quantity", "[", 
+   RowBox[{"1.66*^-27", ",", "\"\<Kilograms\>\""}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.876493206105277*^9, 3.876493238981744*^9}},
+ CellLabel->"In[5]:=",ExpressionUUID->"e05f626a-87c1-4154-b051-74046bf3cca5"],
+
+Cell[BoxData[
+ TemplateBox[{"1.66`*^-27", "\"kg\"", "kilograms", "\"Kilograms\""},
+  "Quantity"]], "Output",
+ CellChangeTimes->{3.876493239444931*^9},
+ CellLabel->"Out[5]=",ExpressionUUID->"a3a3acec-ccf9-4212-a08d-4244c30094c1"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  SubscriptBox["m", "U"], " ", "=", " ", 
+  RowBox[{"235.04", "*", "u"}]}]], "Input",
+ CellChangeTimes->{{3.876493243776313*^9, 3.876493264880849*^9}},
+ CellLabel->"In[6]:=",ExpressionUUID->"2579f00e-0f3a-43d1-b1f7-0795165deec0"],
+
+Cell[BoxData[
+ TemplateBox[{
+  "3.9016639999999994`*^-25", "\"kg\"", "kilograms", "\"Kilograms\""},
+  "Quantity"]], "Output",
+ CellChangeTimes->{3.876493266047394*^9},
+ CellLabel->"Out[6]=",ExpressionUUID->"5d5007a6-62ce-4742-83fb-320aa62f0fbd"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"\[Mu]", " ", "=", " ", 
+  RowBox[{
+   SubscriptBox["m", "\[Alpha]"], "*", 
+   RowBox[{
+    SubscriptBox["m", "U"], "/", 
+    RowBox[{"(", 
+     RowBox[{
+      SubscriptBox["m", "\[Alpha]"], " ", "+", " ", 
+      SubscriptBox["m", "U"]}], ")"}]}]}]}]], "Input",
+ CellChangeTimes->{{3.876493274594872*^9, 3.876493315071678*^9}},
+ CellLabel->"In[7]:=",ExpressionUUID->"e9eaa00b-070b-4151-bf4b-499072ecae93"],
+
+Cell[BoxData[
+ TemplateBox[{
+  "6.528888888888888`*^-27", "\"kg\"", "kilograms", "\"Kilograms\""},
+  "Quantity"]], "Output",
+ CellChangeTimes->{3.8764933155969973`*^9},
+ CellLabel->"Out[7]=",ExpressionUUID->"166c2c10-5493-4117-b9fb-2ab7b19888d5"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{808, 791},
+WindowMargins->{{Automatic, 222}, {15, Automatic}},
+FrontEndVersion->"13.1 for Mac OS X ARM (64-bit) (June 16, 2022)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"603d0b4a-e477-435b-b3d7-809afecc27e2"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 182, 6, 105, "Section",ExpressionUUID->"de0a1b75-284d-4370-a665-046d2deca768"],
+Cell[765, 30, 591, 14, 58, "Text",ExpressionUUID->"0c227674-d287-452b-a687-caf2fb485956"],
+Cell[1359, 46, 199, 3, 30, "Input",ExpressionUUID->"bae0e4f4-bb6a-4e40-8275-698d7581de19"],
+Cell[1561, 51, 281, 6, 41, "Input",ExpressionUUID->"fd534f2b-8b15-4c48-9223-4181f6fe54cb"],
+Cell[1845, 59, 273, 6, 41, "Input",ExpressionUUID->"7f20dbb7-872d-48c1-994d-b259a115e608"],
+Cell[CellGroupData[{
+Cell[2143, 69, 316, 6, 30, "Input",ExpressionUUID->"de7a41df-d8c5-46f4-b340-4c357310ff0c"],
+Cell[2462, 77, 230, 4, 40, "Output",ExpressionUUID->"89389da2-7d45-4e5d-a044-bb45ccb9032a"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[2729, 86, 286, 5, 30, "Input",ExpressionUUID->"e05f626a-87c1-4154-b051-74046bf3cca5"],
+Cell[3018, 93, 228, 4, 40, "Output",ExpressionUUID->"a3a3acec-ccf9-4212-a08d-4244c30094c1"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3283, 102, 253, 5, 30, "Input",ExpressionUUID->"2579f00e-0f3a-43d1-b1f7-0795165deec0"],
+Cell[3539, 109, 245, 5, 40, "Output",ExpressionUUID->"5d5007a6-62ce-4742-83fb-320aa62f0fbd"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3821, 119, 428, 11, 30, "Input",ExpressionUUID->"e9eaa00b-070b-4151-bf4b-499072ecae93"],
+Cell[4252, 132, 246, 5, 63, "Output",ExpressionUUID->"166c2c10-5493-4117-b9fb-2ab7b19888d5"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
