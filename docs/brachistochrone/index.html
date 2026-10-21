@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="An interactive comparison of the cycloid and straight-line solutions to the brachistochrone problem."
+    />
+    <title>The Brachistochrone Problem</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="page-header">
+        <p class="eyebrow">Analytical Mechanics</p>
+        <h1>The brachistochrone problem</h1>
+        <p class="lede">
+          Which track carries a bead between two points in the least time? Compare a straight track
+          with the cycloid predicted by the calculus of variations.
+        </p>
+      </header>
+
+      <section class="controls" aria-label="Visualization controls">
+        <label>
+          <span>Horizontal distance, <i>x</i><sub>f</sub></span>
+          <output id="distance-output" for="distance">4.0 m</output>
+          <input id="distance" type="range" min="2" max="8" step="0.1" value="4" />
+        </label>
+        <label>
+          <span>Vertical drop, <i>y</i><sub>f</sub></span>
+          <output id="drop-output" for="drop">2.0 m</output>
+          <input id="drop" type="range" min="1" max="5" step="0.1" value="2" />
+        </label>
+        <div class="button-row">
+          <button id="race-button" type="button">Start race</button>
+          <button id="reset-button" class="secondary" type="button">Reset</button>
+        </div>
+      </section>
+
+      <section class="visualization-card" aria-labelledby="track-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Frictionless tracks</p>
+            <h2 id="track-heading">Same endpoints, different travel times</h2>
+          </div>
+          <p id="race-status" class="status" aria-live="polite">Ready</p>
+        </div>
+
+        <svg
+          id="track-plot"
+          viewBox="0 0 900 520"
+          role="img"
+          aria-labelledby="plot-title plot-description"
+        >
+          <title id="plot-title">Cycloid and straight-line tracks</title>
+          <desc id="plot-description">
+            Two beads begin at the same upper-left point and travel to the same lower-right point.
+          </desc>
+          <g id="grid"></g>
+          <path id="straight-path" class="track straight-track"></path>
+          <path id="cycloid-path" class="track cycloid-track"></path>
+          <circle id="straight-bead" class="bead straight-bead" r="10"></circle>
+          <circle id="cycloid-bead" class="bead cycloid-bead" r="10"></circle>
+          <circle id="start-marker" class="endpoint" r="6"></circle>
+          <circle id="end-marker" class="endpoint" r="6"></circle>
+          <text id="start-label" class="axis-label">Start</text>
+          <text id="end-label" class="axis-label">Finish</text>
+        </svg>
+
+        <div class="legend" aria-label="Track legend">
+          <span><i class="swatch cycloid"></i>Cycloid</span>
+          <span><i class="swatch straight"></i>Straight line</span>
+        </div>
+      </section>
+
+      <section class="results" aria-label="Calculated travel times">
+        <article>
+          <p>Cycloid time</p>
+          <strong id="cycloid-time">0.000 s</strong>
+        </article>
+        <article>
+          <p>Straight-line time</p>
+          <strong id="straight-time">0.000 s</strong>
+        </article>
+        <article>
+          <p>Time saved</p>
+          <strong id="time-saved">0.000 s</strong>
+        </article>
+      </section>
+
+      <section class="explanation">
+        <h2>The cycloid solution</h2>
+        <p>
+          Taking downward as positive, the cycloid can be written parametrically as
+        </p>
+        <div class="equation" aria-label="Cycloid parametric equations">
+          <span><i>x</i> = <i>a</i>(<i>theta</i> - sin <i>theta</i>)</span>
+          <span><i>y</i> = <i>a</i>(1 - cos <i>theta</i>)</span>
+        </div>
+        <p>
+          The page solves for <i>a</i> and the final value of <i>theta</i> so the curve passes through
+          the selected endpoint. The travel time is then
+          <span class="inline-equation"><i>T</i> = sqrt(<i>a</i>/<i>g</i>) <i>theta</i><sub>f</sub></span>.
+        </p>
+        <p class="assumptions">
+          Assumptions: point mass, uniform gravity, no friction, and no rotational kinetic energy.
+        </p>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
