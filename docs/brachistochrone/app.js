@@ -16,6 +16,8 @@ const plot = {
   right: 55,
   top: 55,
   bottom: 70,
+  xMax: 8,
+  yMax: 8,
 };
 
 const elements = {
@@ -179,19 +181,13 @@ function calculateModel(horizontalDistance, verticalDrop) {
   };
 }
 
-function yLimit() {
-  const baseLimit = model.verticalDrop * 1.7;
-  if (!elements.showCycloid.checked) return baseLimit;
-  return Math.max(baseLimit, model.cycloidScale * 2 * 1.08);
-}
-
 function toScreen(point) {
   const innerWidth = plot.width - plot.left - plot.right;
   const innerHeight = plot.height - plot.top - plot.bottom;
 
   return {
-    x: plot.left + (point.x / model.horizontalDistance) * innerWidth,
-    y: plot.top + (point.y / yLimit()) * innerHeight,
+    x: plot.left + (point.x / plot.xMax) * innerWidth,
+    y: plot.top + (point.y / plot.yMax) * innerHeight,
   };
 }
 
@@ -200,8 +196,8 @@ function fromScreen(screenPoint) {
   const innerHeight = plot.height - plot.top - plot.bottom;
 
   return {
-    x: ((screenPoint.x - plot.left) / innerWidth) * model.horizontalDistance,
-    y: ((screenPoint.y - plot.top) / innerHeight) * yLimit(),
+    x: ((screenPoint.x - plot.left) / innerWidth) * plot.xMax,
+    y: ((screenPoint.y - plot.top) / innerHeight) * plot.yMax,
   };
 }
 
@@ -246,9 +242,9 @@ function drawGrid() {
   const innerWidth = plot.width - plot.left - plot.right;
   const innerHeight = plot.height - plot.top - plot.bottom;
 
-  for (let index = 0; index <= 5; index += 1) {
+  for (let index = 0; index <= plot.xMax; index += 1) {
     const vertical = document.createElementNS(SVG_NS, "line");
-    const x = plot.left + (innerWidth * index) / 5;
+    const x = plot.left + (innerWidth * index) / plot.xMax;
     vertical.setAttribute("x1", x);
     vertical.setAttribute("x2", x);
     vertical.setAttribute("y1", plot.top);
@@ -256,15 +252,49 @@ function drawGrid() {
     vertical.setAttribute("class", "grid-line");
     elements.grid.append(vertical);
 
+    if (index > 0) {
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", x);
+      label.setAttribute("y", plot.top + innerHeight + 27);
+      label.setAttribute("class", "tick-label x-tick");
+      label.textContent = String(index);
+      elements.grid.append(label);
+    }
+  }
+
+  for (let index = 0; index <= plot.yMax; index += 1) {
     const horizontal = document.createElementNS(SVG_NS, "line");
-    const y = plot.top + (innerHeight * index) / 5;
+    const y = plot.top + (innerHeight * index) / plot.yMax;
     horizontal.setAttribute("x1", plot.left);
     horizontal.setAttribute("x2", plot.left + innerWidth);
     horizontal.setAttribute("y1", y);
     horizontal.setAttribute("y2", y);
     horizontal.setAttribute("class", "grid-line");
     elements.grid.append(horizontal);
+
+    if (index > 0) {
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", plot.left - 18);
+      label.setAttribute("y", y + 5);
+      label.setAttribute("class", "tick-label y-tick");
+      label.textContent = String(index);
+      elements.grid.append(label);
+    }
   }
+
+  const xUnit = document.createElementNS(SVG_NS, "text");
+  xUnit.setAttribute("x", plot.left + innerWidth);
+  xUnit.setAttribute("y", plot.top + innerHeight + 50);
+  xUnit.setAttribute("class", "axis-unit");
+  xUnit.textContent = "x (m)";
+  elements.grid.append(xUnit);
+
+  const yUnit = document.createElementNS(SVG_NS, "text");
+  yUnit.setAttribute("x", plot.left - 48);
+  yUnit.setAttribute("y", plot.top + 5);
+  yUnit.setAttribute("class", "axis-unit y-unit");
+  yUnit.textContent = "y (m)";
+  elements.grid.append(yUnit);
 }
 
 function drawControlPoints() {

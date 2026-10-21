@@ -17,6 +17,7 @@ Then open <http://localhost:8000/brachistochrone/>.
 - Drag four interior control points to create a smooth trial curve.
 - Watch a compact copy of the functional and its current value update directly in the plot.
 - Adjust the horizontal distance and vertical drop.
+- See endpoint changes against fixed, meter-labeled axes.
 - Evaluate the travel-time functional for every visible curve, integrating the
   start-point singularity exactly on each sampled segment.
 - Compare the trial curve with a straight line.

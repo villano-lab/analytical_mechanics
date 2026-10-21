@@ -111,18 +111,27 @@
           <circle id="end-marker" class="endpoint" r="6"></circle>
           <text id="start-label" class="axis-label">Start</text>
           <text id="end-label" class="axis-label">Finish</text>
-          <g
-            class="plot-functional"
-            role="status"
-            aria-live="polite"
-            aria-label="Current trial curve travel time"
-          >
-            <rect x="420" y="18" width="448" height="70" rx="14"></rect>
-            <text x="444" y="47">T[y] = ∫₀ˣᶠ √((1 + y′²)/(2gy)) dx</text>
-            <text class="plot-functional-value" x="444" y="73">
-              Trial curve: <tspan id="plot-custom-time">0.000 s</tspan>
-            </text>
-          </g>
+          <foreignObject x="420" y="16" width="448" height="82">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="plot-functional">
+              <div
+                class="mini-equation"
+                aria-label="T of y equals the integral from zero to x f of the square root of one plus y prime squared over two g y, d x"
+              >
+                <span><i>T</i>[<i>y</i>] =</span>
+                <span class="mini-integral">∫</span>
+                <span class="mini-limits"><sup><i>x</i><sub>f</sub></sup><sub>0</sub></span>
+                <span class="mini-radical">√</span>
+                <span class="mini-fraction">
+                  <span>1 + <i>y</i>′<sup>2</sup></span>
+                  <span>2<i>g</i><i>y</i></span>
+                </span>
+                <span><i>dx</i></span>
+              </div>
+              <div class="plot-functional-value" role="status" aria-live="polite">
+                Trial curve: <span id="plot-custom-time">0.000 s</span>
+              </div>
+            </div>
+          </foreignObject>
         </svg>
 
         <div class="legend" aria-label="Track legend">
