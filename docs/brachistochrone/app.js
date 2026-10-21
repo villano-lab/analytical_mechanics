@@ -95,7 +95,7 @@ function catmullRomPoint(point0, point1, point2, point3, parameter) {
   };
 }
 
-function sampleSmoothCurve(knots, samplesPerSegment = 55) {
+function sampleSmoothCurve(knots, samplesPerSegment = 120) {
   const sampled = [];
 
   for (let segment = 0; segment < knots.length - 1; segment += 1) {
@@ -122,8 +122,17 @@ function integrateTravelTime(points) {
     const previous = points[index - 1];
     const current = points[index];
     const distance = Math.hypot(current.x - previous.x, current.y - previous.y);
-    const midpointHeight = Math.max((previous.y + current.y) / 2, 1e-9);
-    totalTime += distance / Math.sqrt(2 * GRAVITY * midpointHeight);
+
+    // Integrate 1/sqrt(y) exactly along this straight sample segment. A
+    // midpoint estimate badly undercounts time near the singular start y = 0.
+    const rootHeightSum = Math.sqrt(previous.y) + Math.sqrt(current.y);
+    const segmentTime =
+      rootHeightSum > 0
+        ? Math.sqrt(2 / GRAVITY) * (distance / rootHeightSum)
+        : distance === 0
+          ? 0
+          : Number.POSITIVE_INFINITY;
+    totalTime += segmentTime;
     cumulativeTimes.push(totalTime);
   }
 
