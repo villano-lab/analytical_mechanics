@@ -229,6 +229,23 @@ h3 {
   font-weight: 650;
 }
 
+.fixed-control {
+  display: flex;
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-weight: 650;
+}
+
+.fixed-control strong {
+  color: var(--cycloid);
+  font-variant-numeric: tabular-nums;
+}
+
 .range-control output {
   color: var(--cycloid);
   font-variant-numeric: tabular-nums;
@@ -256,6 +273,7 @@ h3 {
 
 .button-row {
   display: flex;
+  grid-column: 1 / -1;
   justify-content: flex-end;
   gap: 0.65rem;
 }
@@ -357,6 +375,18 @@ input:focus-visible,
 
 .custom-track {
   stroke: var(--custom);
+}
+
+.saved-track {
+  stroke: var(--custom);
+  stroke-width: 3;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.best-saved-track {
+  stroke-width: 4;
+  opacity: 0.38;
 }
 
 .cycloid-track {
@@ -521,12 +551,113 @@ input:focus-visible,
   background: var(--custom);
 }
 
+.swatch.saved {
+  background: color-mix(in srgb, var(--custom) 32%, transparent);
+}
+
 .swatch.cycloid {
   background: var(--cycloid);
 }
 
 .swatch.straight {
   background: repeating-linear-gradient(90deg, var(--straight) 0 8px, transparent 8px 12px);
+}
+
+.trial-history {
+  margin-top: 1.25rem;
+  padding: 1.15rem 1rem 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.history-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.history-heading h3 {
+  margin: 0;
+}
+
+#history-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+#history-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 120px;
+  margin-top: 0.4rem;
+  border-radius: 10px;
+  background: #f7fafb;
+}
+
+.history-axis,
+.history-tick {
+  stroke: #8da0ad;
+  stroke-width: 2;
+}
+
+.history-tick-label,
+.history-current-label,
+.history-cycloid-label {
+  fill: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+  text-anchor: middle;
+}
+
+.history-current-label {
+  fill: var(--custom);
+}
+
+.history-current-dot {
+  fill: white;
+  stroke: var(--custom);
+  stroke-width: 4;
+}
+
+.history-saved-dot {
+  fill: var(--custom);
+  stroke: white;
+  stroke-width: 3;
+  cursor: pointer;
+}
+
+.history-saved-dot.best {
+  fill: #4f2d81;
+  stroke: #e4d7f5;
+  stroke-width: 5;
+}
+
+.history-saved-dot:focus-visible {
+  outline: none;
+  stroke: var(--cycloid);
+  stroke-width: 6;
+}
+
+.history-cycloid-line {
+  stroke: var(--cycloid);
+  stroke-width: 3;
+  stroke-dasharray: 6 5;
+}
+
+.history-cycloid-label {
+  fill: var(--cycloid);
+  text-anchor: start;
+}
+
+.history-note {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-align: center;
 }
 
 .explanation {

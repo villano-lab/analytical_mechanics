@@ -59,11 +59,10 @@
       </section>
 
       <section class="controls" aria-label="Visualization controls">
-        <label class="range-control">
+        <div class="fixed-control">
           <span>Horizontal distance, <i>x</i><sub>f</sub></span>
-          <output id="distance-output" for="distance">4.0 m</output>
-          <input id="distance" type="range" min="2" max="8" step="0.1" value="4" />
-        </label>
+          <strong>10.0 m</strong>
+        </div>
         <label class="range-control">
           <span>Vertical drop, <i>y</i><sub>f</sub></span>
           <output id="drop-output" for="drop">2.0 m</output>
@@ -74,6 +73,7 @@
           <span>Show cycloid solution</span>
         </label>
         <div class="button-row">
+          <button id="save-button" type="button">Save trial</button>
           <button id="race-button" type="button">Start race</button>
           <button id="reset-button" class="secondary" type="button">Reset curve</button>
         </div>
@@ -100,6 +100,7 @@
             The cycloid is optional.
           </desc>
           <g id="grid"></g>
+          <g id="saved-curves"></g>
           <path id="straight-path" class="track straight-track"></path>
           <path id="custom-path" class="track custom-track"></path>
           <path id="cycloid-path" class="track cycloid-track" hidden></path>
@@ -136,9 +137,27 @@
 
         <div class="legend" aria-label="Track legend">
           <span><i class="swatch custom"></i>Trial curve</span>
+          <span><i class="swatch saved"></i>Saved trials</span>
           <span><i class="swatch straight"></i>Straight line</span>
           <span id="cycloid-legend" hidden><i class="swatch cycloid"></i>Cycloid</span>
         </div>
+
+        <section class="trial-history" aria-labelledby="history-heading">
+          <div class="history-heading">
+            <div>
+              <p class="eyebrow">Trial history</p>
+              <h3 id="history-heading">Travel-time attempts</h3>
+            </div>
+            <p id="history-summary">No saved trials yet</p>
+          </div>
+          <svg
+            id="history-plot"
+            viewBox="0 0 900 150"
+            role="img"
+            aria-label="Dot plot of current and saved trial-curve travel times"
+          ></svg>
+          <p class="history-note">Save a curve to add it here. Select a saved dot to restore that curve.</p>
+        </section>
       </section>
 
       <section class="explanation">

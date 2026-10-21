@@ -1,6 +1,7 @@
 "use strict";
 
 const GRAVITY = 9.81;
+const HORIZONTAL_DISTANCE = 10;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const DEFAULT_CONTROL_POINTS = [
   { x: 0.16, y: 0.48 },
@@ -16,21 +17,23 @@ const plot = {
   right: 55,
   top: 55,
   bottom: 70,
-  xMax: 8,
+  xMax: HORIZONTAL_DISTANCE,
   yMax: 8,
 };
 
 const elements = {
-  distance: document.querySelector("#distance"),
   drop: document.querySelector("#drop"),
-  distanceOutput: document.querySelector("#distance-output"),
   dropOutput: document.querySelector("#drop-output"),
   showCycloid: document.querySelector("#show-cycloid"),
+  saveButton: document.querySelector("#save-button"),
   raceButton: document.querySelector("#race-button"),
   resetButton: document.querySelector("#reset-button"),
   raceStatus: document.querySelector("#race-status"),
   grid: document.querySelector("#grid"),
+  savedCurves: document.querySelector("#saved-curves"),
   plot: document.querySelector("#track-plot"),
+  historyPlot: document.querySelector("#history-plot"),
+  historySummary: document.querySelector("#history-summary"),
   controlPoints: document.querySelector("#control-points"),
   straightPath: document.querySelector("#straight-path"),
   customPath: document.querySelector("#custom-path"),
@@ -55,6 +58,7 @@ let controlPoints = structuredClone(DEFAULT_CONTROL_POINTS);
 let model;
 let animationFrame;
 let draggedPointIndex = null;
+let savedTrials = [];
 
 function endpointEquation(theta, ratio) {
   return (theta - Math.sin(theta)) / (1 - Math.cos(theta)) - ratio;
@@ -216,6 +220,12 @@ function pathData(points) {
     .join(" ");
 }
 
+function svgElement(name, attributes = {}) {
+  const element = document.createElementNS(SVG_NS, name);
+  Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+  return element;
+}
+
 function pointAtTime(points, cumulativeTimes, elapsed) {
   if (elapsed <= 0) return points[0];
   const totalTime = cumulativeTimes[cumulativeTimes.length - 1];
@@ -322,12 +332,121 @@ function drawControlPoints() {
   });
 }
 
+function drawSavedCurves() {
+  elements.savedCurves.replaceChildren();
+  if (savedTrials.length === 0) return;
+
+  const bestTime = Math.min(...savedTrials.map((trial) => trial.time));
+  savedTrials.forEach((trial, index) => {
+    const path = svgElement("path", {
+      d: pathData(trial.samples),
+      class: `track saved-track${trial.time === bestTime ? " best-saved-track" : ""}`,
+      "data-index": index,
+    });
+    elements.savedCurves.append(path);
+  });
+}
+
+function historyX(time, minimum, maximum) {
+  const left = 72;
+  const right = 848;
+  return left + ((time - minimum) / (maximum - minimum)) * (right - left);
+}
+
+function drawHistory() {
+  elements.historyPlot.replaceChildren();
+  const currentTime = model.customTiming.totalTime;
+  const visibleTimes = [currentTime, model.straightTime, ...savedTrials.map((trial) => trial.time)];
+  if (elements.showCycloid.checked) visibleTimes.push(model.cycloidTime);
+
+  const rawMinimum = Math.min(...visibleTimes);
+  const rawMaximum = Math.max(...visibleTimes);
+  const padding = Math.max((rawMaximum - rawMinimum) * 0.09, 0.04);
+  const minimum = Math.max(0, rawMinimum - padding);
+  const maximum = rawMaximum + padding;
+  const axisY = 88;
+
+  elements.historyPlot.append(
+    svgElement("line", { x1: 72, x2: 848, y1: axisY, y2: axisY, class: "history-axis" }),
+  );
+
+  for (let index = 0; index <= 4; index += 1) {
+    const time = minimum + ((maximum - minimum) * index) / 4;
+    const x = historyX(time, minimum, maximum);
+    const tick = svgElement("line", {
+      x1: x,
+      x2: x,
+      y1: axisY - 6,
+      y2: axisY + 6,
+      class: "history-tick",
+    });
+    const label = svgElement("text", { x, y: 116, class: "history-tick-label" });
+    label.textContent = `${time.toFixed(2)} s`;
+    elements.historyPlot.append(tick, label);
+  }
+
+  if (elements.showCycloid.checked) {
+    const x = historyX(model.cycloidTime, minimum, maximum);
+    const line = svgElement("line", {
+      x1: x,
+      x2: x,
+      y1: 20,
+      y2: axisY + 7,
+      class: "history-cycloid-line",
+    });
+    const label = svgElement("text", { x: x + 7, y: 26, class: "history-cycloid-label" });
+    label.textContent = `Cycloid ${model.cycloidTime.toFixed(3)} s`;
+    elements.historyPlot.append(line, label);
+  }
+
+  const currentX = historyX(currentTime, minimum, maximum);
+  const currentDot = svgElement("circle", {
+    cx: currentX,
+    cy: 51,
+    r: 9,
+    class: "history-current-dot",
+  });
+  const currentLabel = svgElement("text", {
+    x: currentX,
+    y: 35,
+    class: "history-current-label",
+  });
+  currentLabel.textContent = `Current ${currentTime.toFixed(3)} s`;
+  elements.historyPlot.append(currentDot, currentLabel);
+
+  const bestTime = savedTrials.length
+    ? Math.min(...savedTrials.map((trial) => trial.time))
+    : Number.POSITIVE_INFINITY;
+  savedTrials.forEach((trial, index) => {
+    const x = historyX(trial.time, minimum, maximum);
+    const dot = svgElement("circle", {
+      cx: x,
+      cy: axisY,
+      r: trial.time === bestTime ? 9 : 7,
+      class: `history-saved-dot${trial.time === bestTime ? " best" : ""}`,
+      tabindex: 0,
+      role: "button",
+      "data-index": index,
+      "aria-label": `Restore saved trial ${index + 1}, ${trial.time.toFixed(3)} seconds${trial.time === bestTime ? ", best saved trial" : ""}`,
+    });
+    const title = svgElement("title");
+    title.textContent = `Trial ${index + 1}: ${trial.time.toFixed(3)} s`;
+    dot.append(title);
+    elements.historyPlot.append(dot);
+  });
+
+  if (savedTrials.length === 0) {
+    elements.historySummary.textContent = "No saved trials yet";
+  } else {
+    elements.historySummary.textContent = `${savedTrials.length} saved · best ${bestTime.toFixed(3)} s`;
+  }
+}
+
 function render() {
   cancelAnimationFrame(animationFrame);
-  model = calculateModel(Number(elements.distance.value), Number(elements.drop.value));
+  model = calculateModel(HORIZONTAL_DISTANCE, Number(elements.drop.value));
   const showCycloid = elements.showCycloid.checked;
 
-  elements.distanceOutput.value = `${model.horizontalDistance.toFixed(1)} m`;
   elements.dropOutput.value = `${model.verticalDrop.toFixed(1)} m`;
   elements.customTime.value = `${model.customTiming.totalTime.toFixed(3)} s`;
   elements.plotCustomTime.textContent = `${model.customTiming.totalTime.toFixed(3)} s`;
@@ -352,7 +471,9 @@ function render() {
   setPosition(elements.cycloidBead, start);
   setPosition(elements.startMarker, start);
   setPosition(elements.endMarker, finish);
+  drawSavedCurves();
   drawControlPoints();
+  drawHistory();
 
   const startScreen = toScreen(start);
   const finishScreen = toScreen(finish);
@@ -487,11 +608,49 @@ function resetCurve() {
   render();
 }
 
-elements.distance.addEventListener("input", render);
-elements.drop.addEventListener("input", render);
+function saveTrial() {
+  savedTrials.push({
+    controlPoints: structuredClone(controlPoints),
+    samples: structuredClone(model.customSamples),
+    time: model.customTiming.totalTime,
+  });
+  render();
+  elements.raceStatus.textContent = `Trial ${savedTrials.length} saved`;
+}
+
+function restoreTrial(index) {
+  const trial = savedTrials[index];
+  if (!trial) return;
+  controlPoints = structuredClone(trial.controlPoints);
+  render();
+  elements.raceStatus.textContent = `Trial ${index + 1} restored`;
+}
+
+function historyTrialIndex(event) {
+  const dot = event.target.closest(".history-saved-dot");
+  return dot ? Number(dot.dataset.index) : null;
+}
+
+elements.drop.addEventListener("input", () => {
+  savedTrials = [];
+  render();
+  elements.raceStatus.textContent = "New endpoint — trial history cleared";
+});
 elements.showCycloid.addEventListener("change", render);
+elements.saveButton.addEventListener("click", saveTrial);
 elements.raceButton.addEventListener("click", runRace);
 elements.resetButton.addEventListener("click", resetCurve);
+elements.historyPlot.addEventListener("click", (event) => {
+  const index = historyTrialIndex(event);
+  if (index !== null) restoreTrial(index);
+});
+elements.historyPlot.addEventListener("keydown", (event) => {
+  if (!["Enter", " "].includes(event.key)) return;
+  const index = historyTrialIndex(event);
+  if (index === null) return;
+  event.preventDefault();
+  restoreTrial(index);
+});
 
 drawGrid();
 render();
