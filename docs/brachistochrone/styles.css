@@ -378,7 +378,7 @@ input:focus-visible,
 }
 
 .saved-track {
-  stroke: var(--custom);
+  stroke: var(--trial-color, var(--custom));
   stroke-width: 3;
   opacity: 0.2;
   pointer-events: none;
@@ -552,7 +552,7 @@ input:focus-visible,
 }
 
 .swatch.saved {
-  background: color-mix(in srgb, var(--custom) 32%, transparent);
+  background: linear-gradient(90deg, #7655a6 0 20%, #d14f68 20% 40%, #d9822b 40% 60%, #2f8f83 60% 80%, #3f6fb6 80%);
 }
 
 .swatch.cycloid {
@@ -565,6 +565,12 @@ input:focus-visible,
 
 .trial-history {
   margin-top: 1.25rem;
+  padding: 1.15rem 1rem 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.class-results {
+  margin-top: 0.8rem;
   padding: 1.15rem 1rem 0.75rem;
   border-top: 1px solid var(--border);
 }
@@ -624,14 +630,13 @@ input:focus-visible,
 }
 
 .history-saved-dot {
-  fill: var(--custom);
+  fill: var(--trial-color, var(--custom));
   stroke: white;
   stroke-width: 3;
   cursor: pointer;
 }
 
 .history-saved-dot.best {
-  fill: #4f2d81;
   stroke: #e4d7f5;
   stroke-width: 5;
 }
@@ -658,6 +663,45 @@ input:focus-visible,
   color: var(--muted);
   font-size: 0.86rem;
   text-align: center;
+}
+
+.class-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin: -0.25rem 0 0.55rem;
+}
+
+button.danger {
+  border-color: #a33b3b;
+  color: #8d2929;
+  background: white;
+}
+
+#class-histogram-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 155px;
+  border-radius: 10px;
+  background: #f7fafb;
+}
+
+.histogram-bar {
+  fill: color-mix(in srgb, var(--cycloid) 78%, white);
+}
+
+.histogram-count,
+.histogram-empty {
+  fill: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.histogram-empty {
+  font-size: 17px;
 }
 
 .explanation {
@@ -692,6 +736,24 @@ input:focus-visible,
   }
 
   .button-row button {
+    flex: 1;
+  }
+
+  .history-heading {
+    display: block;
+  }
+
+  #history-summary,
+  #class-summary {
+    margin-top: 0.45rem;
+  }
+
+  .class-actions {
+    justify-content: stretch;
+    margin-top: 0.8rem;
+  }
+
+  .class-actions button {
     flex: 1;
   }
 

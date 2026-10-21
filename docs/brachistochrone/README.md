@@ -24,5 +24,11 @@ Then open <http://localhost:8000/brachistochrone/>.
 - Reveal the cycloid solution with an optional checkbox.
 - Animate beads released simultaneously from rest.
 - Save trial curves, compare their times in a dot plot, and restore a curve by selecting its dot.
+- Match saved curves to their history dots with a stable color palette.
+- Collect a browser-local class histogram, separated by vertical endpoint.
+- Open the page with `?teacher=1` to reveal the class-histogram reset control.
+
+The class histogram is a shared-device prototype. GitHub Pages has no server-side storage or secure
+teacher authentication, so aggregating submissions across student devices would require a backend.
 
 The calculation assumes a point mass, uniform gravitational acceleration, no friction, and no rolling energy.

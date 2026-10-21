@@ -158,6 +158,32 @@
           ></svg>
           <p class="history-note">Save a curve to add it here. Select a saved dot to restore that curve.</p>
         </section>
+
+        <section class="class-results" aria-labelledby="class-results-heading">
+          <div class="history-heading">
+            <div>
+              <p class="eyebrow">Shared-device classroom mode</p>
+              <h3 id="class-results-heading">Class histogram</h3>
+            </div>
+            <p id="class-summary">No class submissions yet</p>
+          </div>
+          <div class="class-actions">
+            <button id="submit-class-button" type="button">Add current time</button>
+            <button id="reset-class-button" class="danger" type="button" hidden>
+              Reset class histogram
+            </button>
+          </div>
+          <svg
+            id="class-histogram-plot"
+            viewBox="0 0 900 220"
+            role="img"
+            aria-label="Histogram of class travel-time submissions"
+          ></svg>
+          <p class="history-note">
+            Stored in this browser for the current vertical drop. Teacher controls are available in
+            teacher mode.
+          </p>
+        </section>
       </section>
 
       <section class="explanation">

@@ -2,7 +2,18 @@
 
 const GRAVITY = 9.81;
 const HORIZONTAL_DISTANCE = 10;
+const CLASS_RESULTS_STORAGE_KEY = "brachistochrone-class-results-v1";
 const SVG_NS = "http://www.w3.org/2000/svg";
+const TRIAL_COLORS = [
+  "#7655a6",
+  "#d14f68",
+  "#d9822b",
+  "#2f8f83",
+  "#3f6fb6",
+  "#a55f2a",
+  "#9a4d92",
+  "#4d8b3a",
+];
 const DEFAULT_CONTROL_POINTS = [
   { x: 0.16, y: 0.48 },
   { x: 0.36, y: 0.82 },
@@ -34,6 +45,10 @@ const elements = {
   plot: document.querySelector("#track-plot"),
   historyPlot: document.querySelector("#history-plot"),
   historySummary: document.querySelector("#history-summary"),
+  classHistogramPlot: document.querySelector("#class-histogram-plot"),
+  classSummary: document.querySelector("#class-summary"),
+  submitClassButton: document.querySelector("#submit-class-button"),
+  resetClassButton: document.querySelector("#reset-class-button"),
   controlPoints: document.querySelector("#control-points"),
   straightPath: document.querySelector("#straight-path"),
   customPath: document.querySelector("#custom-path"),
@@ -59,6 +74,34 @@ let model;
 let animationFrame;
 let draggedPointIndex = null;
 let savedTrials = [];
+let classResults = loadClassResults();
+const teacherMode = new URLSearchParams(window.location.search).get("teacher") === "1";
+
+function loadClassResults() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(CLASS_RESULTS_STORAGE_KEY) || "{}");
+    return stored && typeof stored === "object" ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveClassResults() {
+  try {
+    window.localStorage.setItem(CLASS_RESULTS_STORAGE_KEY, JSON.stringify(classResults));
+  } catch {
+    // The visualization still works if browser storage is unavailable.
+  }
+}
+
+function currentEndpointKey() {
+  return Number(elements.drop.value).toFixed(1);
+}
+
+function currentClassTimes() {
+  const times = classResults[currentEndpointKey()];
+  return Array.isArray(times) ? times : [];
+}
 
 function endpointEquation(theta, ratio) {
   return (theta - Math.sin(theta)) / (1 - Math.cos(theta)) - ratio;
@@ -341,6 +384,7 @@ function drawSavedCurves() {
     const path = svgElement("path", {
       d: pathData(trial.samples),
       class: `track saved-track${trial.time === bestTime ? " best-saved-track" : ""}`,
+      style: `--trial-color: ${trial.color}`,
       "data-index": index,
     });
     elements.savedCurves.append(path);
@@ -424,6 +468,7 @@ function drawHistory() {
       cy: axisY,
       r: trial.time === bestTime ? 9 : 7,
       class: `history-saved-dot${trial.time === bestTime ? " best" : ""}`,
+      style: `--trial-color: ${trial.color}`,
       tabindex: 0,
       role: "button",
       "data-index": index,
@@ -440,6 +485,113 @@ function drawHistory() {
   } else {
     elements.historySummary.textContent = `${savedTrials.length} saved · best ${bestTime.toFixed(3)} s`;
   }
+}
+
+function drawClassHistogram() {
+  elements.classHistogramPlot.replaceChildren();
+  const times = currentClassTimes();
+  const endpoint = Number(elements.drop.value).toFixed(1);
+
+  if (times.length === 0) {
+    const message = svgElement("text", {
+      x: 450,
+      y: 112,
+      class: "histogram-empty",
+    });
+    message.textContent = `No submissions yet for vertical drop ${endpoint} m`;
+    elements.classHistogramPlot.append(message);
+    elements.classSummary.textContent = `0 submissions · drop ${endpoint} m`;
+    return;
+  }
+
+  const domainValues = [...times];
+  if (elements.showCycloid.checked) domainValues.push(model.cycloidTime);
+  let minimum = Math.min(...domainValues);
+  let maximum = Math.max(...domainValues);
+  const spread = maximum - minimum;
+  const padding = Math.max(spread * 0.12, 0.08);
+  minimum = Math.max(0, minimum - padding);
+  maximum += padding;
+
+  const binCount = Math.min(10, Math.max(5, Math.ceil(Math.sqrt(times.length))));
+  const binWidth = (maximum - minimum) / binCount;
+  const counts = Array(binCount).fill(0);
+  times.forEach((time) => {
+    const index = Math.min(binCount - 1, Math.max(0, Math.floor((time - minimum) / binWidth)));
+    counts[index] += 1;
+  });
+
+  const left = 72;
+  const right = 848;
+  const top = 28;
+  const bottom = 172;
+  const chartWidth = right - left;
+  const chartHeight = bottom - top;
+  const maximumCount = Math.max(...counts);
+  const xForTime = (time) => left + ((time - minimum) / (maximum - minimum)) * chartWidth;
+
+  elements.classHistogramPlot.append(
+    svgElement("line", { x1: left, x2: right, y1: bottom, y2: bottom, class: "history-axis" }),
+  );
+
+  counts.forEach((count, index) => {
+    const gap = 4;
+    const width = chartWidth / binCount - gap;
+    const height = count === 0 ? 0 : (count / maximumCount) * (chartHeight - 20);
+    const x = left + (chartWidth * index) / binCount + gap / 2;
+    const y = bottom - height;
+    const bar = svgElement("rect", {
+      x,
+      y,
+      width,
+      height,
+      rx: 5,
+      class: "histogram-bar",
+    });
+    elements.classHistogramPlot.append(bar);
+
+    if (count > 0) {
+      const label = svgElement("text", {
+        x: x + width / 2,
+        y: y - 7,
+        class: "histogram-count",
+      });
+      label.textContent = String(count);
+      elements.classHistogramPlot.append(label);
+    }
+  });
+
+  for (let index = 0; index <= 4; index += 1) {
+    const time = minimum + ((maximum - minimum) * index) / 4;
+    const x = xForTime(time);
+    const tick = svgElement("line", {
+      x1: x,
+      x2: x,
+      y1: bottom - 5,
+      y2: bottom + 6,
+      class: "history-tick",
+    });
+    const label = svgElement("text", { x, y: 201, class: "history-tick-label" });
+    label.textContent = `${time.toFixed(2)} s`;
+    elements.classHistogramPlot.append(tick, label);
+  }
+
+  if (elements.showCycloid.checked) {
+    const x = xForTime(model.cycloidTime);
+    const line = svgElement("line", {
+      x1: x,
+      x2: x,
+      y1: top,
+      y2: bottom,
+      class: "history-cycloid-line",
+    });
+    const label = svgElement("text", { x: x + 7, y: top + 2, class: "history-cycloid-label" });
+    label.textContent = "Cycloid";
+    elements.classHistogramPlot.append(line, label);
+  }
+
+  const best = Math.min(...times);
+  elements.classSummary.textContent = `${times.length} submission${times.length === 1 ? "" : "s"} · best ${best.toFixed(3)} s`;
 }
 
 function render() {
@@ -474,6 +626,7 @@ function render() {
   drawSavedCurves();
   drawControlPoints();
   drawHistory();
+  drawClassHistogram();
 
   const startScreen = toScreen(start);
   const finishScreen = toScreen(finish);
@@ -613,6 +766,7 @@ function saveTrial() {
     controlPoints: structuredClone(controlPoints),
     samples: structuredClone(model.customSamples),
     time: model.customTiming.totalTime,
+    color: TRIAL_COLORS[savedTrials.length % TRIAL_COLORS.length],
   });
   render();
   elements.raceStatus.textContent = `Trial ${savedTrials.length} saved`;
@@ -624,6 +778,22 @@ function restoreTrial(index) {
   controlPoints = structuredClone(trial.controlPoints);
   render();
   elements.raceStatus.textContent = `Trial ${index + 1} restored`;
+}
+
+function submitClassTime() {
+  const key = currentEndpointKey();
+  const times = currentClassTimes();
+  classResults[key] = [...times, model.customTiming.totalTime];
+  saveClassResults();
+  drawClassHistogram();
+  elements.raceStatus.textContent = `Added to class histogram (${classResults[key].length})`;
+}
+
+function resetClassHistogram() {
+  delete classResults[currentEndpointKey()];
+  saveClassResults();
+  drawClassHistogram();
+  elements.raceStatus.textContent = "Class histogram reset for this endpoint";
 }
 
 function historyTrialIndex(event) {
@@ -638,6 +808,8 @@ elements.drop.addEventListener("input", () => {
 });
 elements.showCycloid.addEventListener("change", render);
 elements.saveButton.addEventListener("click", saveTrial);
+elements.submitClassButton.addEventListener("click", submitClassTime);
+elements.resetClassButton.addEventListener("click", resetClassHistogram);
 elements.raceButton.addEventListener("click", runRace);
 elements.resetButton.addEventListener("click", resetCurve);
 elements.historyPlot.addEventListener("click", (event) => {
@@ -653,4 +825,5 @@ elements.historyPlot.addEventListener("keydown", (event) => {
 });
 
 drawGrid();
+elements.resetClassButton.toggleAttribute("hidden", !teacherMode);
 render();
