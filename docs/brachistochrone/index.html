@@ -111,6 +111,18 @@
           <circle id="end-marker" class="endpoint" r="6"></circle>
           <text id="start-label" class="axis-label">Start</text>
           <text id="end-label" class="axis-label">Finish</text>
+          <g
+            class="plot-functional"
+            role="status"
+            aria-live="polite"
+            aria-label="Current trial curve travel time"
+          >
+            <rect x="420" y="18" width="448" height="70" rx="14"></rect>
+            <text x="444" y="47">T[y] = ∫₀ˣᶠ √((1 + y′²)/(2gy)) dx</text>
+            <text class="plot-functional-value" x="444" y="73">
+              Trial curve: <tspan id="plot-custom-time">0.000 s</tspan>
+            </text>
+          </g>
         </svg>
 
         <div class="legend" aria-label="Track legend">

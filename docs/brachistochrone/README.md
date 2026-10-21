@@ -15,6 +15,7 @@ Then open <http://localhost:8000/brachistochrone/>.
 ## Current scope
 
 - Drag four interior control points to create a smooth trial curve.
+- Watch a compact copy of the functional and its current value update directly in the plot.
 - Adjust the horizontal distance and vertical drop.
 - Evaluate the travel-time functional for every visible curve.
 - Compare the trial curve with a straight line.

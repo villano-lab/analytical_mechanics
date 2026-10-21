@@ -392,6 +392,30 @@ input:focus-visible,
   font-weight: 650;
 }
 
+.plot-functional rect {
+  fill: rgba(255, 255, 255, 0.94);
+  stroke: rgba(38, 28, 61, 0.14);
+  stroke-width: 1.5;
+}
+
+.plot-functional text {
+  fill: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.plot-functional .plot-functional-value {
+  fill: var(--custom);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+#plot-custom-time {
+  font-variant-numeric: tabular-nums;
+}
+
 .legend {
   display: flex;
   flex-wrap: wrap;

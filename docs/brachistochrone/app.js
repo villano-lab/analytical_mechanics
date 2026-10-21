@@ -41,6 +41,7 @@ const elements = {
   startLabel: document.querySelector("#start-label"),
   endLabel: document.querySelector("#end-label"),
   customTime: document.querySelector("#custom-time"),
+  plotCustomTime: document.querySelector("#plot-custom-time"),
   straightTime: document.querySelector("#straight-time"),
   cycloidTime: document.querySelector("#cycloid-time"),
   cycloidEvaluation: document.querySelector("#cycloid-evaluation"),
@@ -290,6 +291,7 @@ function render() {
   elements.distanceOutput.value = `${model.horizontalDistance.toFixed(1)} m`;
   elements.dropOutput.value = `${model.verticalDrop.toFixed(1)} m`;
   elements.customTime.value = `${model.customTiming.totalTime.toFixed(3)} s`;
+  elements.plotCustomTime.textContent = `${model.customTiming.totalTime.toFixed(3)} s`;
   elements.straightTime.value = `${model.straightTime.toFixed(3)} s`;
   elements.cycloidTime.value = `${model.cycloidTime.toFixed(3)} s`;
   elements.raceStatus.textContent = "Ready";
