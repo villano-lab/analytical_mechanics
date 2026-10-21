@@ -60,6 +60,8 @@ const elements = {
   classStorageNote: document.querySelector("#class-storage-note"),
   submitClassButton: document.querySelector("#submit-class-button"),
   resetClassButton: document.querySelector("#reset-class-button"),
+  teacherPassphraseDialog: document.querySelector("#teacher-passphrase-dialog"),
+  teacherPassphrase: document.querySelector("#teacher-passphrase"),
   controlPoints: document.querySelector("#control-points"),
   straightPath: document.querySelector("#straight-path"),
   customPath: document.querySelector("#custom-path"),
@@ -936,10 +938,30 @@ async function submitClassTimes() {
   }
 }
 
+function requestTeacherPassphrase() {
+  elements.teacherPassphrase.value = "";
+  elements.teacherPassphraseDialog.returnValue = "cancel";
+  elements.teacherPassphraseDialog.showModal();
+  elements.teacherPassphrase.focus();
+
+  return new Promise((resolve) => {
+    elements.teacherPassphraseDialog.addEventListener(
+      "close",
+      () => {
+        const confirmed = elements.teacherPassphraseDialog.returnValue === "confirm";
+        const passphrase = confirmed ? elements.teacherPassphrase.value : null;
+        elements.teacherPassphrase.value = "";
+        resolve(passphrase);
+      },
+      { once: true },
+    );
+  });
+}
+
 async function resetClassHistogram() {
   try {
     if (USING_SHARED_API) {
-      const teacherToken = window.prompt("Teacher reset passphrase");
+      const teacherToken = await requestTeacherPassphrase();
       if (teacherToken === null) return;
       const response = await fetch(classApiEndpoint(), {
         method: "DELETE",

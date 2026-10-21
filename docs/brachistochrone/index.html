@@ -221,6 +221,26 @@
       </section>
     </main>
 
+    <dialog id="teacher-passphrase-dialog" class="teacher-dialog">
+      <form method="dialog">
+        <p class="eyebrow">Teacher mode</p>
+        <h2>Reset class histogram?</h2>
+        <p>Enter the teacher passphrase. It will remain hidden and is not stored.</p>
+        <label for="teacher-passphrase">Passphrase</label>
+        <input
+          id="teacher-passphrase"
+          name="teacher-passphrase"
+          type="password"
+          autocomplete="off"
+          required
+        />
+        <div class="teacher-dialog-actions">
+          <button class="secondary" type="submit" value="cancel" formnovalidate>Cancel</button>
+          <button class="danger" type="submit" value="confirm">Reset histogram</button>
+        </div>
+      </form>
+    </dialog>
+
     <script src="./config.js"></script>
     <script src="./app.js"></script>
   </body>
