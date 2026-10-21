@@ -3,6 +3,8 @@
 const GRAVITY = 9.81;
 const HORIZONTAL_DISTANCE = 10;
 const CLASS_RESULTS_STORAGE_KEY = "brachistochrone-class-results-v1";
+const HISTOGRAM_BIN_SECONDS = 0.1;
+const HISTOGRAM_BIN_PIXELS = 52;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const APP_CONFIG = window.BRACHISTOCHRONE_CONFIG || {};
 const CLASS_API_BASE_URL = String(APP_CONFIG.apiBaseUrl || "").replace(/\/$/, "");
@@ -51,6 +53,7 @@ const elements = {
   historyPlot: document.querySelector("#history-plot"),
   historySummary: document.querySelector("#history-summary"),
   classHistogramPlot: document.querySelector("#class-histogram-plot"),
+  classHistogramScroll: document.querySelector("#class-histogram-scroll"),
   classSummary: document.querySelector("#class-summary"),
   classModeLabel: document.querySelector("#class-mode-label"),
   classStorageNote: document.querySelector("#class-storage-note"),
@@ -536,6 +539,10 @@ function updateTrialActions() {
 
 function drawClassHistogram() {
   elements.classHistogramPlot.replaceChildren();
+  elements.classHistogramPlot.setAttribute("viewBox", "0 0 900 220");
+  elements.classHistogramPlot.style.width = "900px";
+  delete elements.classHistogramPlot.dataset.minimumBin;
+  delete elements.classHistogramPlot.dataset.binPixels;
   const times = currentClassTimes();
   const endpoint = Number(elements.drop.value).toFixed(1);
 
@@ -553,29 +560,37 @@ function drawClassHistogram() {
 
   const domainValues = [...times];
   if (elements.showCycloid.checked) domainValues.push(model.cycloidTime);
-  let minimum = Math.min(...domainValues);
-  let maximum = Math.max(...domainValues);
-  const spread = maximum - minimum;
-  const padding = Math.max(spread * 0.12, 0.08);
-  minimum = Math.max(0, minimum - padding);
-  maximum += padding;
-
-  const binCount = Math.min(10, Math.max(5, Math.ceil(Math.sqrt(times.length))));
-  const binWidth = (maximum - minimum) / binCount;
+  const minimumValue = Math.min(...domainValues);
+  const maximumValue = Math.max(...domainValues);
+  const minimumBin = Math.max(0, Math.floor(minimumValue / HISTOGRAM_BIN_SECONDS) - 1);
+  const maximumBin = Math.ceil(maximumValue / HISTOGRAM_BIN_SECONDS) + 1;
+  const binCount = Math.max(3, maximumBin - minimumBin);
   const counts = Array(binCount).fill(0);
   times.forEach((time) => {
-    const index = Math.min(binCount - 1, Math.max(0, Math.floor((time - minimum) / binWidth)));
+    const index = Math.min(
+      binCount - 1,
+      Math.max(0, Math.floor(time / HISTOGRAM_BIN_SECONDS) - minimumBin),
+    );
     counts[index] += 1;
   });
 
   const left = 72;
-  const right = 848;
   const top = 28;
   const bottom = 172;
-  const chartWidth = right - left;
+  const chartWidth = Math.max(776, binCount * HISTOGRAM_BIN_PIXELS);
+  const pixelsPerBin = chartWidth / binCount;
+  const right = left + chartWidth;
+  const svgWidth = right + 52;
   const chartHeight = bottom - top;
   const maximumCount = Math.max(...counts);
-  const xForTime = (time) => left + ((time - minimum) / (maximum - minimum)) * chartWidth;
+  const minimum = minimumBin * HISTOGRAM_BIN_SECONDS;
+  const xForTime = (time) =>
+    left + ((time - minimum) / HISTOGRAM_BIN_SECONDS) * pixelsPerBin;
+
+  elements.classHistogramPlot.setAttribute("viewBox", `0 0 ${svgWidth} 220`);
+  elements.classHistogramPlot.style.width = `${svgWidth}px`;
+  elements.classHistogramPlot.dataset.minimumBin = String(minimumBin);
+  elements.classHistogramPlot.dataset.binPixels = String(pixelsPerBin);
 
   elements.classHistogramPlot.append(
     svgElement("line", { x1: left, x2: right, y1: bottom, y2: bottom, class: "history-axis" }),
@@ -583,9 +598,9 @@ function drawClassHistogram() {
 
   counts.forEach((count, index) => {
     const gap = 4;
-    const width = chartWidth / binCount - gap;
+    const width = pixelsPerBin - gap;
     const height = count === 0 ? 0 : (count / maximumCount) * (chartHeight - 20);
-    const x = left + (chartWidth * index) / binCount + gap / 2;
+    const x = left + pixelsPerBin * index + gap / 2;
     const y = bottom - height;
     const bar = svgElement("rect", {
       x,
@@ -608,9 +623,10 @@ function drawClassHistogram() {
     }
   });
 
-  for (let index = 0; index <= 4; index += 1) {
-    const time = minimum + ((maximum - minimum) * index) / 4;
-    const x = xForTime(time);
+  for (let index = 0; index <= binCount; index += 1) {
+    const absoluteBin = minimumBin + index;
+    const time = absoluteBin * HISTOGRAM_BIN_SECONDS;
+    const x = left + pixelsPerBin * index;
     const tick = svgElement("line", {
       x1: x,
       x2: x,
@@ -618,9 +634,12 @@ function drawClassHistogram() {
       y2: bottom + 6,
       class: "history-tick",
     });
-    const label = svgElement("text", { x, y: 201, class: "history-tick-label" });
-    label.textContent = `${time.toFixed(2)} s`;
-    elements.classHistogramPlot.append(tick, label);
+    elements.classHistogramPlot.append(tick);
+    if (absoluteBin % 5 === 0 || index === 0 || index === binCount) {
+      const label = svgElement("text", { x, y: 201, class: "history-tick-label" });
+      label.textContent = `${time.toFixed(1)} s`;
+      elements.classHistogramPlot.append(label);
+    }
   }
 
   if (elements.showCycloid.checked) {
@@ -639,6 +658,18 @@ function drawClassHistogram() {
 
   const best = Math.min(...times);
   elements.classSummary.textContent = `${times.length} submission${times.length === 1 ? "" : "s"} · best ${best.toFixed(3)} s`;
+}
+
+function scrollHistogramToTime(time) {
+  const minimumBin = Number(elements.classHistogramPlot.dataset.minimumBin);
+  const pixelsPerBin = Number(elements.classHistogramPlot.dataset.binPixels);
+  if (!Number.isFinite(minimumBin) || !Number.isFinite(pixelsPerBin)) return;
+  const minimum = minimumBin * HISTOGRAM_BIN_SECONDS;
+  const x = 72 + ((time - minimum) / HISTOGRAM_BIN_SECONDS) * pixelsPerBin;
+  elements.classHistogramScroll.scrollLeft = Math.max(
+    0,
+    x - elements.classHistogramScroll.clientWidth / 2,
+  );
 }
 
 function render() {
@@ -868,6 +899,7 @@ async function submitClassTimes() {
       trial.submitted = true;
     });
     updateTrialActions();
+    scrollHistogramToTime(newTrials[newTrials.length - 1].time);
     elements.raceStatus.textContent = `${newTrials.length} new trial${newTrials.length === 1 ? "" : "s"} added to class histogram`;
   } catch (error) {
     console.error(error);

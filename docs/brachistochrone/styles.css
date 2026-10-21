@@ -694,13 +694,33 @@ button.danger {
   background: white;
 }
 
-#class-histogram-plot {
-  display: block;
-  width: 100%;
-  height: auto;
-  min-height: 155px;
+.histogram-scale-note {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 650;
+  text-align: right;
+}
+
+.histogram-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #e2e9ed;
   border-radius: 10px;
   background: #f7fafb;
+  scrollbar-gutter: stable;
+}
+
+.histogram-scroll:focus-visible {
+  outline: 3px solid rgba(10, 120, 145, 0.3);
+  outline-offset: 2px;
+}
+
+#class-histogram-plot {
+  display: block;
+  height: auto;
+  min-height: 155px;
 }
 
 .histogram-bar {

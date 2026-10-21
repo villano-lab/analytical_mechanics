@@ -27,6 +27,7 @@ Then open <http://localhost:8000/brachistochrone/>.
 - Match saved curves to their history dots with a stable color palette.
 - Batch-add only new saved trials to a browser-local class histogram, separated by vertical endpoint.
 - Clear personal saved trials without changing previously submitted class results.
+- Keep class-histogram bins fixed at 0.10 s and scroll horizontally to inspect outliers.
 - Open the page with `?teacher=1` to reveal the class-histogram reset control.
 
 The published page sends class results to the companion Cloudflare Worker configured in `config.js`,
