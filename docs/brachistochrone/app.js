@@ -37,6 +37,7 @@ const elements = {
   dropOutput: document.querySelector("#drop-output"),
   showCycloid: document.querySelector("#show-cycloid"),
   saveButton: document.querySelector("#save-button"),
+  clearTrialsButton: document.querySelector("#clear-trials-button"),
   raceButton: document.querySelector("#race-button"),
   resetButton: document.querySelector("#reset-button"),
   raceStatus: document.querySelector("#race-status"),
@@ -485,6 +486,18 @@ function drawHistory() {
   } else {
     elements.historySummary.textContent = `${savedTrials.length} saved · best ${bestTime.toFixed(3)} s`;
   }
+
+  updateTrialActions();
+}
+
+function updateTrialActions() {
+  const newTrialCount = savedTrials.filter((trial) => !trial.submitted).length;
+  elements.clearTrialsButton.disabled = savedTrials.length === 0;
+  elements.submitClassButton.disabled = newTrialCount === 0;
+  elements.submitClassButton.textContent =
+    newTrialCount === 0
+      ? "No new saved trials"
+      : `Add ${newTrialCount} new trial${newTrialCount === 1 ? "" : "s"} to class`;
 }
 
 function drawClassHistogram() {
@@ -767,6 +780,7 @@ function saveTrial() {
     samples: structuredClone(model.customSamples),
     time: model.customTiming.totalTime,
     color: TRIAL_COLORS[savedTrials.length % TRIAL_COLORS.length],
+    submitted: false,
   });
   render();
   elements.raceStatus.textContent = `Trial ${savedTrials.length} saved`;
@@ -780,13 +794,31 @@ function restoreTrial(index) {
   elements.raceStatus.textContent = `Trial ${index + 1} restored`;
 }
 
-function submitClassTime() {
+function clearSavedTrials() {
+  const clearedCount = savedTrials.length;
+  savedTrials = [];
+  render();
+  elements.raceStatus.textContent =
+    clearedCount === 0 ? "No saved trials to clear" : `${clearedCount} saved trial${clearedCount === 1 ? "" : "s"} cleared`;
+}
+
+function submitClassTimes() {
+  const newTrials = savedTrials.filter((trial) => !trial.submitted);
+  if (newTrials.length === 0) {
+    elements.raceStatus.textContent = "No new saved trials to add";
+    return;
+  }
+
   const key = currentEndpointKey();
   const times = currentClassTimes();
-  classResults[key] = [...times, model.customTiming.totalTime];
+  classResults[key] = [...times, ...newTrials.map((trial) => trial.time)];
+  newTrials.forEach((trial) => {
+    trial.submitted = true;
+  });
   saveClassResults();
   drawClassHistogram();
-  elements.raceStatus.textContent = `Added to class histogram (${classResults[key].length})`;
+  updateTrialActions();
+  elements.raceStatus.textContent = `${newTrials.length} new trial${newTrials.length === 1 ? "" : "s"} added to class histogram`;
 }
 
 function resetClassHistogram() {
@@ -808,7 +840,8 @@ elements.drop.addEventListener("input", () => {
 });
 elements.showCycloid.addEventListener("change", render);
 elements.saveButton.addEventListener("click", saveTrial);
-elements.submitClassButton.addEventListener("click", submitClassTime);
+elements.clearTrialsButton.addEventListener("click", clearSavedTrials);
+elements.submitClassButton.addEventListener("click", submitClassTimes);
 elements.resetClassButton.addEventListener("click", resetClassHistogram);
 elements.raceButton.addEventListener("click", runRace);
 elements.resetButton.addEventListener("click", resetCurve);

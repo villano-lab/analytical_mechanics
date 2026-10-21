@@ -25,7 +25,8 @@ Then open <http://localhost:8000/brachistochrone/>.
 - Animate beads released simultaneously from rest.
 - Save trial curves, compare their times in a dot plot, and restore a curve by selecting its dot.
 - Match saved curves to their history dots with a stable color palette.
-- Collect a browser-local class histogram, separated by vertical endpoint.
+- Batch-add only new saved trials to a browser-local class histogram, separated by vertical endpoint.
+- Clear personal saved trials without changing previously submitted class results.
 - Open the page with `?teacher=1` to reveal the class-histogram reset control.
 
 The class histogram is a shared-device prototype. GitHub Pages has no server-side storage or secure
