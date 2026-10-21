@@ -688,6 +688,19 @@ input:focus-visible,
   margin: -0.25rem 0 0.55rem;
 }
 
+.class-submit-status {
+  min-height: 1.2em;
+  margin: -0.2rem 0 0.45rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 650;
+  text-align: right;
+}
+
+.class-submit-status.error {
+  color: #8d2929;
+}
+
 button.danger {
   border-color: #a33b3b;
   color: #8d2929;
@@ -798,6 +811,10 @@ button.danger {
 
   .class-actions button {
     flex: 1;
+  }
+
+  .class-submit-status {
+    text-align: left;
   }
 
   .section-heading {

@@ -55,6 +55,7 @@ const elements = {
   classHistogramPlot: document.querySelector("#class-histogram-plot"),
   classHistogramScroll: document.querySelector("#class-histogram-scroll"),
   classSummary: document.querySelector("#class-summary"),
+  classSubmitStatus: document.querySelector("#class-submit-status"),
   classModeLabel: document.querySelector("#class-mode-label"),
   classStorageNote: document.querySelector("#class-storage-note"),
   submitClassButton: document.querySelector("#submit-class-button"),
@@ -850,6 +851,9 @@ function saveTrial() {
   });
   render();
   elements.raceStatus.textContent = `Trial ${savedTrials.length} saved`;
+  const waitingCount = savedTrials.filter((trial) => !trial.submitted).length;
+  elements.classSubmitStatus.classList.remove("error");
+  elements.classSubmitStatus.textContent = `${waitingCount} saved trial${waitingCount === 1 ? " is" : "s are"} ready to add.`;
 }
 
 function restoreTrial(index) {
@@ -866,17 +870,27 @@ function clearSavedTrials() {
   render();
   elements.raceStatus.textContent =
     clearedCount === 0 ? "No saved trials to clear" : `${clearedCount} saved trial${clearedCount === 1 ? "" : "s"} cleared`;
+  elements.classSubmitStatus.classList.remove("error");
+  elements.classSubmitStatus.textContent = "Save a trial before adding it to the class.";
 }
 
 async function submitClassTimes() {
   const newTrials = savedTrials.filter((trial) => !trial.submitted);
   if (newTrials.length === 0) {
     elements.raceStatus.textContent = "No new saved trials to add";
+    elements.classSubmitStatus.classList.remove("error");
+    elements.classSubmitStatus.textContent = "All currently saved trials have already been added.";
     return;
   }
 
   const key = currentEndpointKey();
+  const originalButtonText = elements.submitClassButton.textContent;
+  elements.submitClassButton.disabled = true;
+  elements.submitClassButton.textContent = "Adding…";
+  elements.classSubmitStatus.classList.remove("error");
+  elements.classSubmitStatus.textContent = `Sending ${newTrials.length} trial${newTrials.length === 1 ? "" : "s"} to the shared histogram…`;
   try {
+    let acceptedCount = newTrials.length;
     if (USING_SHARED_API) {
       const response = await fetch(classApiEndpoint(), {
         method: "POST",
@@ -886,7 +900,13 @@ async function submitClassTimes() {
           submissions: newTrials.map((trial) => ({ id: trial.id, time: trial.time })),
         }),
       });
-      if (!response.ok) throw new Error(`Class API returned ${response.status}`);
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || `Class API returned ${response.status}`);
+      }
+      acceptedCount = Number.isFinite(Number(result.accepted))
+        ? Number(result.accepted)
+        : newTrials.length;
       await refreshClassResults();
     } else {
       const times = currentClassTimes();
@@ -901,9 +921,18 @@ async function submitClassTimes() {
     updateTrialActions();
     scrollHistogramToTime(newTrials[newTrials.length - 1].time);
     elements.raceStatus.textContent = `${newTrials.length} new trial${newTrials.length === 1 ? "" : "s"} added to class histogram`;
+    elements.classSubmitStatus.classList.remove("error");
+    elements.classSubmitStatus.textContent =
+      acceptedCount === 0
+        ? "These trials were already present in the shared histogram."
+        : `${acceptedCount} trial${acceptedCount === 1 ? "" : "s"} added successfully.`;
   } catch (error) {
     console.error(error);
     elements.raceStatus.textContent = "Could not reach the shared class histogram";
+    elements.classSubmitStatus.classList.add("error");
+    elements.classSubmitStatus.textContent = `Could not add trials: ${error.message}`;
+    elements.submitClassButton.disabled = false;
+    elements.submitClassButton.textContent = originalButtonText;
   }
 }
 
