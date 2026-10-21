@@ -4,6 +4,10 @@ const GRAVITY = 9.81;
 const HORIZONTAL_DISTANCE = 10;
 const CLASS_RESULTS_STORAGE_KEY = "brachistochrone-class-results-v1";
 const SVG_NS = "http://www.w3.org/2000/svg";
+const APP_CONFIG = window.BRACHISTOCHRONE_CONFIG || {};
+const CLASS_API_BASE_URL = String(APP_CONFIG.apiBaseUrl || "").replace(/\/$/, "");
+const CLASS_SESSION_NAME = String(APP_CONFIG.sessionName || "analytical-mechanics-2026");
+const USING_SHARED_API = CLASS_API_BASE_URL.length > 0;
 const TRIAL_COLORS = [
   "#7655a6",
   "#d14f68",
@@ -48,6 +52,8 @@ const elements = {
   historySummary: document.querySelector("#history-summary"),
   classHistogramPlot: document.querySelector("#class-histogram-plot"),
   classSummary: document.querySelector("#class-summary"),
+  classModeLabel: document.querySelector("#class-mode-label"),
+  classStorageNote: document.querySelector("#class-storage-note"),
   submitClassButton: document.querySelector("#submit-class-button"),
   resetClassButton: document.querySelector("#reset-class-button"),
   controlPoints: document.querySelector("#control-points"),
@@ -102,6 +108,34 @@ function currentEndpointKey() {
 function currentClassTimes() {
   const times = classResults[currentEndpointKey()];
   return Array.isArray(times) ? times : [];
+}
+
+function classApiEndpoint() {
+  const session = encodeURIComponent(CLASS_SESSION_NAME);
+  const drop = encodeURIComponent(currentEndpointKey());
+  return `${CLASS_API_BASE_URL}/api/sessions/${session}/submissions?drop=${drop}`;
+}
+
+function newSubmissionId() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 14)}`;
+}
+
+async function refreshClassResults() {
+  if (!USING_SHARED_API) return;
+
+  try {
+    const response = await fetch(classApiEndpoint(), { headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error(`Class API returned ${response.status}`);
+    const result = await response.json();
+    classResults[currentEndpointKey()] = Array.isArray(result.times)
+      ? result.times.map(Number).filter(Number.isFinite)
+      : [];
+    drawClassHistogram();
+  } catch (error) {
+    console.error(error);
+    elements.classSummary.textContent = "Shared histogram unavailable";
+  }
 }
 
 function endpointEquation(theta, ratio) {
@@ -776,6 +810,7 @@ function resetCurve() {
 
 function saveTrial() {
   savedTrials.push({
+    id: newSubmissionId(),
     controlPoints: structuredClone(controlPoints),
     samples: structuredClone(model.customSamples),
     time: model.customTiming.totalTime,
@@ -802,7 +837,7 @@ function clearSavedTrials() {
     clearedCount === 0 ? "No saved trials to clear" : `${clearedCount} saved trial${clearedCount === 1 ? "" : "s"} cleared`;
 }
 
-function submitClassTimes() {
+async function submitClassTimes() {
   const newTrials = savedTrials.filter((trial) => !trial.submitted);
   if (newTrials.length === 0) {
     elements.raceStatus.textContent = "No new saved trials to add";
@@ -810,22 +845,61 @@ function submitClassTimes() {
   }
 
   const key = currentEndpointKey();
-  const times = currentClassTimes();
-  classResults[key] = [...times, ...newTrials.map((trial) => trial.time)];
-  newTrials.forEach((trial) => {
-    trial.submitted = true;
-  });
-  saveClassResults();
-  drawClassHistogram();
-  updateTrialActions();
-  elements.raceStatus.textContent = `${newTrials.length} new trial${newTrials.length === 1 ? "" : "s"} added to class histogram`;
+  try {
+    if (USING_SHARED_API) {
+      const response = await fetch(classApiEndpoint(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          verticalDrop: Number(key),
+          submissions: newTrials.map((trial) => ({ id: trial.id, time: trial.time })),
+        }),
+      });
+      if (!response.ok) throw new Error(`Class API returned ${response.status}`);
+      await refreshClassResults();
+    } else {
+      const times = currentClassTimes();
+      classResults[key] = [...times, ...newTrials.map((trial) => trial.time)];
+      saveClassResults();
+      drawClassHistogram();
+    }
+
+    newTrials.forEach((trial) => {
+      trial.submitted = true;
+    });
+    updateTrialActions();
+    elements.raceStatus.textContent = `${newTrials.length} new trial${newTrials.length === 1 ? "" : "s"} added to class histogram`;
+  } catch (error) {
+    console.error(error);
+    elements.raceStatus.textContent = "Could not reach the shared class histogram";
+  }
 }
 
-function resetClassHistogram() {
-  delete classResults[currentEndpointKey()];
-  saveClassResults();
-  drawClassHistogram();
-  elements.raceStatus.textContent = "Class histogram reset for this endpoint";
+async function resetClassHistogram() {
+  try {
+    if (USING_SHARED_API) {
+      const teacherToken = window.prompt("Teacher reset passphrase");
+      if (teacherToken === null) return;
+      const response = await fetch(classApiEndpoint(), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${teacherToken}` },
+      });
+      if (!response.ok) {
+        elements.raceStatus.textContent =
+          response.status === 401 ? "Teacher passphrase not accepted" : "Could not reset histogram";
+        return;
+      }
+      await refreshClassResults();
+    } else {
+      delete classResults[currentEndpointKey()];
+      saveClassResults();
+      drawClassHistogram();
+    }
+    elements.raceStatus.textContent = "Class histogram reset for this endpoint";
+  } catch (error) {
+    console.error(error);
+    elements.raceStatus.textContent = "Could not reach the shared class histogram";
+  }
 }
 
 function historyTrialIndex(event) {
@@ -838,6 +912,7 @@ elements.drop.addEventListener("input", () => {
   render();
   elements.raceStatus.textContent = "New endpoint — trial history cleared";
 });
+elements.drop.addEventListener("change", refreshClassResults);
 elements.showCycloid.addEventListener("change", render);
 elements.saveButton.addEventListener("click", saveTrial);
 elements.clearTrialsButton.addEventListener("click", clearSavedTrials);
@@ -859,4 +934,9 @@ elements.historyPlot.addEventListener("keydown", (event) => {
 
 drawGrid();
 elements.resetClassButton.toggleAttribute("hidden", !teacherMode);
+if (USING_SHARED_API) {
+  elements.classModeLabel.textContent = "Shared class session";
+  elements.classStorageNote.textContent = `Shared through Cloudflare for session ${CLASS_SESSION_NAME}. Teacher reset is available in teacher mode.`;
+}
 render();
+refreshClassResults();

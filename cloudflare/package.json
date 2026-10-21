@@ -1,0 +1,16 @@
+{
+  "name": "brachistochrone-class-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create brachistochrone-class-histogram",
+    "db:migrate:local": "wrangler d1 migrations apply brachistochrone-class-histogram --local",
+    "db:migrate:remote": "wrangler d1 migrations apply brachistochrone-class-histogram --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

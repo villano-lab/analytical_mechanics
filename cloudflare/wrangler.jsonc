@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "brachistochrone-class-api",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-21",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "brachistochrone-class-histogram",
+      "database_id": "cf77875b-96dc-4a92-bad0-6c4930a84aae",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
