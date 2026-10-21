@@ -3,8 +3,8 @@
 const GRAVITY = 9.81;
 const HORIZONTAL_DISTANCE = 10;
 const CLASS_RESULTS_STORAGE_KEY = "brachistochrone-class-results-v1";
-const HISTOGRAM_BIN_SECONDS = 0.1;
-const HISTOGRAM_BIN_PIXELS = 52;
+const HISTOGRAM_BIN_SECONDS = 0.05;
+const HISTOGRAM_BIN_PIXELS = 44;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const APP_CONFIG = window.BRACHISTOCHRONE_CONFIG || {};
 const CLASS_API_BASE_URL = String(APP_CONFIG.apiBaseUrl || "").replace(/\/$/, "");
@@ -635,9 +635,9 @@ function drawClassHistogram() {
       class: "history-tick",
     });
     elements.classHistogramPlot.append(tick);
-    if (absoluteBin % 5 === 0 || index === 0 || index === binCount) {
+    if (absoluteBin % 10 === 0 || index === 0 || index === binCount) {
       const label = svgElement("text", { x, y: 201, class: "history-tick-label" });
-      label.textContent = `${time.toFixed(1)} s`;
+      label.textContent = `${time.toFixed(2)} s`;
       elements.classHistogramPlot.append(label);
     }
   }
