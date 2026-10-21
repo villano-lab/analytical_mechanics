@@ -1,6 +1,6 @@
 # Brachistochrone visualization
 
-A dependency-free, client-side visualization comparing the brachistochrone cycloid with the straight-line path between the same endpoints.
+A dependency-free, client-side visualization for exploring the travel-time functional with editable trial curves.
 
 ## Run locally
 
@@ -14,9 +14,11 @@ Then open <http://localhost:8000/brachistochrone/>.
 
 ## Current scope
 
+- Drag four interior control points to create a smooth trial curve.
 - Adjust the horizontal distance and vertical drop.
-- Compare the cycloid and straight-line travel times.
+- Evaluate the travel-time functional for every visible curve.
+- Compare the trial curve with a straight line.
+- Reveal the cycloid solution with an optional checkbox.
 - Animate beads released simultaneously from rest.
-- Show the parametric cycloid that connects the selected endpoints.
 
 The calculation assumes a point mass, uniform gravitational acceleration, no friction, and no rolling energy.

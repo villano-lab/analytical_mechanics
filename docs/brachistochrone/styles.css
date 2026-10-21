@@ -5,6 +5,7 @@
   --paper: #f4f7f9;
   --card: #ffffff;
   --border: #cdd9e0;
+  --custom: #7655a6;
   --cycloid: #0a7891;
   --straight: #c36a2d;
   --accent: #173f67;
@@ -13,6 +14,10 @@
 
 * {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 body {
@@ -33,7 +38,7 @@ input {
 }
 
 .page-header {
-  max-width: 800px;
+  max-width: 830px;
   margin-bottom: 2rem;
 }
 
@@ -48,6 +53,7 @@ input {
 
 h1,
 h2,
+h3,
 p {
   margin-top: 0;
 }
@@ -64,14 +70,20 @@ h2 {
   font-size: clamp(1.35rem, 3vw, 2rem);
 }
 
+h3 {
+  margin: 1.4rem 0 0.45rem;
+  font-size: 1.2rem;
+}
+
 .lede {
-  max-width: 720px;
+  max-width: 760px;
   margin-bottom: 0;
   color: var(--muted);
   font-size: 1.12rem;
   line-height: 1.65;
 }
 
+.functional,
 .controls,
 .visualization-card,
 .explanation {
@@ -81,35 +93,170 @@ h2 {
   box-shadow: 0 12px 35px rgba(20, 38, 56, 0.07);
 }
 
+.functional {
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-top: 5px solid var(--accent);
+}
+
+.functional-equation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.18em;
+  align-items: center;
+  justify-content: center;
+  margin: 1.2rem 0 0.8rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  color: var(--ink);
+  background: #edf3f7;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 4.5vw, 2.7rem);
+  overflow-x: auto;
+}
+
+.functional-name {
+  margin-right: 0.1em;
+}
+
+.integral {
+  font-size: 1.7em;
+  line-height: 0.8;
+}
+
+.limits {
+  display: grid;
+  align-self: stretch;
+  margin-left: -0.2em;
+  font-size: 0.42em;
+  line-height: 1;
+}
+
+.limits sup {
+  align-self: start;
+}
+
+.limits sub {
+  align-self: end;
+}
+
+.radical {
+  font-size: 1.25em;
+}
+
+.fraction {
+  display: inline-grid;
+  align-items: center;
+  text-align: center;
+  font-size: 0.72em;
+}
+
+.fraction span:first-child {
+  padding: 0 0.25em 0.12em;
+  border-bottom: 2px solid currentColor;
+}
+
+.fraction span:last-child {
+  padding-top: 0.12em;
+}
+
+.functional-note {
+  max-width: 850px;
+  margin: 0 auto 1.2rem;
+  color: var(--muted);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.evaluations {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.evaluation {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 5px solid;
+  border-radius: 10px;
+  background: white;
+}
+
+.evaluation > span {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.evaluation strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.evaluation output {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.custom-evaluation {
+  border-left-color: var(--custom);
+}
+
+.straight-evaluation {
+  border-left-color: var(--straight);
+}
+
+.cycloid-evaluation {
+  border-left-color: var(--cycloid);
+}
+
 .controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
-  gap: 1.3rem 2rem;
-  align-items: end;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem 2rem;
+  align-items: center;
   padding: 1.25rem 1.4rem;
   margin-bottom: 1rem;
 }
 
-.controls label {
+.range-control {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0.5rem 1rem;
   font-weight: 650;
 }
 
-.controls output {
+.range-control output {
   color: var(--cycloid);
   font-variant-numeric: tabular-nums;
 }
 
-.controls input {
+.range-control input {
   grid-column: 1 / -1;
   width: 100%;
   accent-color: var(--cycloid);
 }
 
+.toggle-control {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  font-weight: 680;
+  cursor: pointer;
+}
+
+.toggle-control input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--cycloid);
+}
+
 .button-row {
   display: flex;
+  justify-content: flex-end;
   gap: 0.65rem;
 }
 
@@ -130,7 +277,8 @@ button.secondary {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+.control-point circle:focus-visible {
   outline: 3px solid rgba(10, 120, 145, 0.3);
   outline-offset: 3px;
 }
@@ -164,6 +312,11 @@ input:focus-visible {
   min-height: 320px;
   border-radius: 12px;
   background: linear-gradient(#f9fbfc, #edf3f6);
+  touch-action: none;
+}
+
+#track-plot.dragging {
+  cursor: grabbing;
 }
 
 .grid-line {
@@ -176,6 +329,10 @@ input:focus-visible {
   stroke-width: 5;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.custom-track {
+  stroke: var(--custom);
 }
 
 .cycloid-track {
@@ -191,6 +348,11 @@ input:focus-visible {
   stroke: white;
   stroke-width: 3;
   filter: drop-shadow(0 3px 4px rgba(20, 38, 56, 0.28));
+  pointer-events: none;
+}
+
+.custom-bead {
+  fill: var(--custom);
 }
 
 .cycloid-bead {
@@ -199,6 +361,25 @@ input:focus-visible {
 
 .straight-bead {
   fill: var(--straight);
+}
+
+.control-point {
+  cursor: grab;
+}
+
+.control-point circle {
+  fill: white;
+  stroke: var(--custom);
+  stroke-width: 4;
+  filter: drop-shadow(0 2px 3px rgba(20, 38, 56, 0.22));
+}
+
+.control-point text {
+  fill: var(--custom);
+  font-size: 13px;
+  font-weight: 800;
+  pointer-events: none;
+  text-anchor: middle;
 }
 
 .endpoint {
@@ -213,7 +394,8 @@ input:focus-visible {
 
 .legend {
   display: flex;
-  gap: 1.2rem;
+  flex-wrap: wrap;
+  gap: 0.7rem 1.2rem;
   justify-content: center;
   padding-top: 1rem;
   color: var(--muted);
@@ -232,6 +414,10 @@ input:focus-visible {
   border-radius: 99px;
 }
 
+.swatch.custom {
+  background: var(--custom);
+}
+
 .swatch.cycloid {
   background: var(--cycloid);
 }
@@ -240,55 +426,19 @@ input:focus-visible {
   background: repeating-linear-gradient(90deg, var(--straight) 0 8px, transparent 8px 12px);
 }
 
-.results {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  margin: 1rem 0;
-}
-
-.results article {
-  padding: 1.15rem 1.25rem;
-  background: var(--ink);
-  border-radius: 14px;
-  color: white;
-}
-
-.results p {
-  margin-bottom: 0.25rem;
-  color: #c6d5df;
-  font-size: 0.85rem;
-}
-
-.results strong {
-  font-size: clamp(1.5rem, 3vw, 2.2rem);
-  font-variant-numeric: tabular-nums;
-}
-
 .explanation {
   padding: 1.5rem;
+  margin-top: 1rem;
   line-height: 1.65;
-}
-
-.equation {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 2.2rem;
-  margin: 1rem 0;
-  padding: 1rem 1.2rem;
-  border-left: 4px solid var(--cycloid);
-  background: #edf7f8;
-  font-family: Georgia, serif;
-  font-size: 1.15rem;
 }
 
 .inline-equation {
   white-space: nowrap;
-  font-family: Georgia, serif;
+  font-family: Georgia, "Times New Roman", serif;
 }
 
 .assumptions {
-  margin-bottom: 0;
+  margin: 1rem 0 0;
   color: var(--muted);
   font-size: 0.9rem;
 }
@@ -298,8 +448,13 @@ input:focus-visible {
     padding-top: 2rem;
   }
 
+  .evaluations,
   .controls {
     grid-template-columns: 1fr;
+  }
+
+  .button-row {
+    justify-content: stretch;
   }
 
   .button-row button {
@@ -313,10 +468,6 @@ input:focus-visible {
   .status {
     display: inline-block;
     margin-bottom: 0.75rem;
-  }
-
-  .results {
-    grid-template-columns: 1fr;
   }
 }
 

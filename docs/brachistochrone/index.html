@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="An interactive comparison of the cycloid and straight-line solutions to the brachistochrone problem."
+      content="An interactive exploration of trial curves and the time functional in the brachistochrone problem."
     />
     <title>The Brachistochrone Problem</title>
     <link rel="stylesheet" href="./styles.css" />
@@ -16,33 +16,74 @@
         <p class="eyebrow">Analytical Mechanics</p>
         <h1>The brachistochrone problem</h1>
         <p class="lede">
-          Which track carries a bead between two points in the least time? Compare a straight track
-          with the cycloid predicted by the calculus of variations.
+          Drag the trial-curve points and watch the travel-time functional change. The cycloid
+          solution stays hidden until you choose to compare against it.
         </p>
       </header>
 
+      <section class="functional" aria-labelledby="functional-heading">
+        <div>
+          <p class="eyebrow">Quantity to minimize</p>
+          <h2 id="functional-heading">The travel-time functional</h2>
+        </div>
+        <div class="functional-equation" aria-label="Travel time as a functional of y">
+          <span class="functional-name"><i>T</i>[<i>y</i>] =</span>
+          <span class="integral">∫</span>
+          <span class="limits"><sup><i>x</i><sub>f</sub></sup><sub>0</sub></span>
+          <span class="radical">√</span>
+          <span class="fraction">
+            <span>1 + (<i>dy</i>/<i>dx</i>)<sup>2</sup></span>
+            <span>2<i>g</i><i>y</i></span>
+          </span>
+          <span><i>dx</i></span>
+        </div>
+        <p class="functional-note">
+          Downward is positive and the bead starts from rest at <i>y</i> = 0. Each displayed time
+          is this integral evaluated along that curve.
+        </p>
+
+        <div class="evaluations" aria-label="Functional values">
+          <article class="evaluation custom-evaluation">
+            <span>Trial curve</span>
+            <strong><i>T</i>[<i>y</i><sub>trial</sub>] = <output id="custom-time">0.000 s</output></strong>
+          </article>
+          <article class="evaluation straight-evaluation">
+            <span>Straight line</span>
+            <strong><i>T</i>[<i>y</i><sub>line</sub>] = <output id="straight-time">0.000 s</output></strong>
+          </article>
+          <article id="cycloid-evaluation" class="evaluation cycloid-evaluation" hidden>
+            <span>Cycloid</span>
+            <strong><i>T</i>[<i>y</i><sub>cycloid</sub>] = <output id="cycloid-time">0.000 s</output></strong>
+          </article>
+        </div>
+      </section>
+
       <section class="controls" aria-label="Visualization controls">
-        <label>
+        <label class="range-control">
           <span>Horizontal distance, <i>x</i><sub>f</sub></span>
           <output id="distance-output" for="distance">4.0 m</output>
           <input id="distance" type="range" min="2" max="8" step="0.1" value="4" />
         </label>
-        <label>
+        <label class="range-control">
           <span>Vertical drop, <i>y</i><sub>f</sub></span>
           <output id="drop-output" for="drop">2.0 m</output>
           <input id="drop" type="range" min="1" max="5" step="0.1" value="2" />
         </label>
+        <label class="toggle-control">
+          <input id="show-cycloid" type="checkbox" />
+          <span>Show cycloid solution</span>
+        </label>
         <div class="button-row">
           <button id="race-button" type="button">Start race</button>
-          <button id="reset-button" class="secondary" type="button">Reset</button>
+          <button id="reset-button" class="secondary" type="button">Reset curve</button>
         </div>
       </section>
 
       <section class="visualization-card" aria-labelledby="track-heading">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Frictionless tracks</p>
-            <h2 id="track-heading">Same endpoints, different travel times</h2>
+            <p class="eyebrow">Editable trial curve</p>
+            <h2 id="track-heading">Drag the numbered points</h2>
           </div>
           <p id="race-status" class="status" aria-live="polite">Ready</p>
         </div>
@@ -53,15 +94,19 @@
           role="img"
           aria-labelledby="plot-title plot-description"
         >
-          <title id="plot-title">Cycloid and straight-line tracks</title>
+          <title id="plot-title">Editable brachistochrone trial curve</title>
           <desc id="plot-description">
-            Two beads begin at the same upper-left point and travel to the same lower-right point.
+            A custom smooth track with four draggable control points and a straight comparison track.
+            The cycloid is optional.
           </desc>
           <g id="grid"></g>
           <path id="straight-path" class="track straight-track"></path>
-          <path id="cycloid-path" class="track cycloid-track"></path>
+          <path id="custom-path" class="track custom-track"></path>
+          <path id="cycloid-path" class="track cycloid-track" hidden></path>
           <circle id="straight-bead" class="bead straight-bead" r="10"></circle>
-          <circle id="cycloid-bead" class="bead cycloid-bead" r="10"></circle>
+          <circle id="custom-bead" class="bead custom-bead" r="10"></circle>
+          <circle id="cycloid-bead" class="bead cycloid-bead" r="10" hidden></circle>
+          <g id="control-points"></g>
           <circle id="start-marker" class="endpoint" r="6"></circle>
           <circle id="end-marker" class="endpoint" r="6"></circle>
           <text id="start-label" class="axis-label">Start</text>
@@ -69,40 +114,29 @@
         </svg>
 
         <div class="legend" aria-label="Track legend">
-          <span><i class="swatch cycloid"></i>Cycloid</span>
+          <span><i class="swatch custom"></i>Trial curve</span>
           <span><i class="swatch straight"></i>Straight line</span>
+          <span id="cycloid-legend" hidden><i class="swatch cycloid"></i>Cycloid</span>
         </div>
-      </section>
-
-      <section class="results" aria-label="Calculated travel times">
-        <article>
-          <p>Cycloid time</p>
-          <strong id="cycloid-time">0.000 s</strong>
-        </article>
-        <article>
-          <p>Straight-line time</p>
-          <strong id="straight-time">0.000 s</strong>
-        </article>
-        <article>
-          <p>Time saved</p>
-          <strong id="time-saved">0.000 s</strong>
-        </article>
       </section>
 
       <section class="explanation">
-        <h2>The cycloid solution</h2>
+        <h2>How the page evaluates a curve</h2>
         <p>
-          Taking downward as positive, the cycloid can be written parametrically as
+          The draggable points define a smooth trial function <i>y</i>(<i>x</i>). The page samples
+          that curve into short segments and numerically sums
+          <span class="inline-equation"><i>dt</i> = <i>ds</i>/√(2<i>g</i><i>y</i>)</span>.
+          Moving a point changes both the path length and how quickly the bead gains speed.
         </p>
-        <div class="equation" aria-label="Cycloid parametric equations">
-          <span><i>x</i> = <i>a</i>(<i>theta</i> - sin <i>theta</i>)</span>
-          <span><i>y</i> = <i>a</i>(1 - cos <i>theta</i>)</span>
+        <div id="cycloid-explanation" hidden>
+          <h3>The revealed extremal</h3>
+          <p>
+            The cycloid is evaluated from
+            <span class="inline-equation"><i>x</i> = <i>a</i>(<i>θ</i> − sin <i>θ</i>)</span> and
+            <span class="inline-equation"><i>y</i> = <i>a</i>(1 − cos <i>θ</i>)</span>, with
+            <i>a</i> and <i>θ</i><sub>f</sub> chosen to reach the same endpoint.
+          </p>
         </div>
-        <p>
-          The page solves for <i>a</i> and the final value of <i>theta</i> so the curve passes through
-          the selected endpoint. The travel time is then
-          <span class="inline-equation"><i>T</i> = sqrt(<i>a</i>/<i>g</i>) <i>theta</i><sub>f</sub></span>.
-        </p>
         <p class="assumptions">
           Assumptions: point mass, uniform gravity, no friction, and no rotational kinetic energy.
         </p>
