@@ -59,9 +59,12 @@ const elements = {
   classModeLabel: document.querySelector("#class-mode-label"),
   classStorageNote: document.querySelector("#class-storage-note"),
   submitClassButton: document.querySelector("#submit-class-button"),
+  loadClassCurvesButton: document.querySelector("#load-class-curves-button"),
   resetClassButton: document.querySelector("#reset-class-button"),
   teacherPassphraseDialog: document.querySelector("#teacher-passphrase-dialog"),
   teacherPassphrase: document.querySelector("#teacher-passphrase"),
+  loadClassCurvesDialog: document.querySelector("#load-class-curves-dialog"),
+  loadClassCurvesWarning: document.querySelector("#load-class-curves-warning"),
   controlPoints: document.querySelector("#control-points"),
   straightPath: document.querySelector("#straight-path"),
   customPath: document.querySelector("#custom-path"),
@@ -88,6 +91,7 @@ let animationFrame;
 let draggedPointIndex = null;
 let savedTrials = [];
 let classResults = loadClassResults();
+let classSubmissions = {};
 const teacherMode = new URLSearchParams(window.location.search).get("teacher") === "1";
 
 function loadClassResults() {
@@ -116,6 +120,31 @@ function currentClassTimes() {
   return Array.isArray(times) ? times : [];
 }
 
+function validStoredControlPoints(value) {
+  if (!Array.isArray(value) || value.length !== DEFAULT_CONTROL_POINTS.length) return false;
+  let previousX = 0;
+  return value.every((point) => {
+    const x = Number(point?.x);
+    const y = Number(point?.y);
+    const valid =
+      Number.isFinite(x) &&
+      Number.isFinite(y) &&
+      x > previousX &&
+      x < 1 &&
+      y >= 0.06 &&
+      y <= 1.62;
+    previousX = x;
+    return valid;
+  });
+}
+
+function currentClassCurves() {
+  const submissions = classSubmissions[currentEndpointKey()];
+  return Array.isArray(submissions)
+    ? submissions.filter((submission) => validStoredControlPoints(submission.controlPoints))
+    : [];
+}
+
 function classApiEndpoint() {
   const session = encodeURIComponent(CLASS_SESSION_NAME);
   const drop = encodeURIComponent(currentEndpointKey());
@@ -137,11 +166,42 @@ async function refreshClassResults() {
     classResults[currentEndpointKey()] = Array.isArray(result.times)
       ? result.times.map(Number).filter(Number.isFinite)
       : [];
+    classSubmissions[currentEndpointKey()] = Array.isArray(result.submissions)
+      ? result.submissions
+          .map((submission) => ({
+            id: String(submission.id || ""),
+            time: Number(submission.time),
+            controlPoints: submission.controlPoints,
+          }))
+          .filter(
+            (submission) =>
+              Number.isFinite(submission.time) &&
+              validStoredControlPoints(submission.controlPoints),
+          )
+      : [];
     drawClassHistogram();
+    updateClassCurveAction();
   } catch (error) {
     console.error(error);
     elements.classSummary.textContent = "Shared histogram unavailable";
   }
+}
+
+function samplesForControlPoints(points) {
+  const knots = [
+    { x: 0, y: 0 },
+    ...points.map((point) => ({
+      x: point.x * model.horizontalDistance,
+      y: point.y * model.verticalDrop,
+    })),
+    { x: model.horizontalDistance, y: model.verticalDrop },
+  ];
+  return sampleSmoothCurve(knots);
+}
+
+function classCurveColor(index) {
+  const hue = (index * 137.508 + 18) % 360;
+  return `hsl(${hue.toFixed(1)} 65% 43%)`;
 }
 
 function endpointEquation(theta, ratio) {
@@ -424,7 +484,7 @@ function drawSavedCurves() {
   savedTrials.forEach((trial, index) => {
     const path = svgElement("path", {
       d: pathData(trial.samples),
-      class: `track saved-track${trial.time === bestTime ? " best-saved-track" : ""}`,
+      class: `track saved-track${trial.fromClass ? " class-saved-track" : ""}${trial.time === bestTime ? " best-saved-track" : ""}`,
       style: `--trial-color: ${trial.color}`,
       "data-index": index,
     });
@@ -538,6 +598,17 @@ function updateTrialActions() {
     newTrialCount === 0
       ? "No new saved trials"
       : `Add ${newTrialCount} new trial${newTrialCount === 1 ? "" : "s"} to class`;
+}
+
+function updateClassCurveAction() {
+  const curveCount = currentClassCurves().length;
+  elements.loadClassCurvesButton.disabled = curveCount === 0;
+  elements.loadClassCurvesButton.textContent =
+    curveCount === 0
+      ? currentClassTimes().length > 0
+        ? "No stored curve shapes yet"
+        : "No class curves yet"
+      : `Load ${curveCount} class curve${curveCount === 1 ? "" : "s"}`;
 }
 
 function drawClassHistogram() {
@@ -899,7 +970,11 @@ async function submitClassTimes() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           verticalDrop: Number(key),
-          submissions: newTrials.map((trial) => ({ id: trial.id, time: trial.time })),
+          submissions: newTrials.map((trial) => ({
+            id: trial.id,
+            time: trial.time,
+            controlPoints: trial.controlPoints,
+          })),
         }),
       });
       const result = await response.json().catch(() => ({}));
@@ -913,8 +988,17 @@ async function submitClassTimes() {
     } else {
       const times = currentClassTimes();
       classResults[key] = [...times, ...newTrials.map((trial) => trial.time)];
+      classSubmissions[key] = [
+        ...(classSubmissions[key] || []),
+        ...newTrials.map((trial) => ({
+          id: trial.id,
+          time: trial.time,
+          controlPoints: structuredClone(trial.controlPoints),
+        })),
+      ];
       saveClassResults();
       drawClassHistogram();
+      updateClassCurveAction();
     }
 
     newTrials.forEach((trial) => {
@@ -936,6 +1020,53 @@ async function submitClassTimes() {
     elements.submitClassButton.disabled = false;
     elements.submitClassButton.textContent = originalButtonText;
   }
+}
+
+function requestClassCurveConfirmation(curveCount, unsentCount) {
+  elements.loadClassCurvesWarning.textContent =
+    unsentCount > 0
+      ? `This will replace your saved-trial workspace with ${curveCount} class curve${curveCount === 1 ? "" : "s"}, including ${unsentCount} local trial${unsentCount === 1 ? "" : "s"} not yet added to the class.`
+      : `This will replace the saved trials in your workspace with ${curveCount} class curve${curveCount === 1 ? "" : "s"}.`;
+  elements.loadClassCurvesDialog.returnValue = "cancel";
+  elements.loadClassCurvesDialog.showModal();
+
+  return new Promise((resolve) => {
+    elements.loadClassCurvesDialog.addEventListener(
+      "close",
+      () => resolve(elements.loadClassCurvesDialog.returnValue === "confirm"),
+      { once: true },
+    );
+  });
+}
+
+async function loadClassCurves() {
+  const submissions = currentClassCurves();
+  if (submissions.length === 0) {
+    elements.classSubmitStatus.classList.remove("error");
+    elements.classSubmitStatus.textContent = "No reconstructable class curves are available yet.";
+    return;
+  }
+
+  const unsentCount = savedTrials.filter((trial) => !trial.submitted).length;
+  if (!(await requestClassCurveConfirmation(submissions.length, unsentCount))) return;
+
+  savedTrials = submissions.map((submission, index) => {
+    const points = structuredClone(submission.controlPoints);
+    return {
+      id: submission.id,
+      controlPoints: points,
+      samples: samplesForControlPoints(points),
+      time: submission.time,
+      color: classCurveColor(index),
+      submitted: true,
+      fromClass: true,
+    };
+  });
+  render();
+  elements.raceStatus.textContent = `${savedTrials.length} class curve${savedTrials.length === 1 ? "" : "s"} loaded`;
+  elements.classSubmitStatus.classList.remove("error");
+  elements.classSubmitStatus.textContent =
+    "Class curves replaced the saved-trial workspace; select a colored history dot to inspect one.";
 }
 
 function requestTeacherPassphrase() {
@@ -975,8 +1106,10 @@ async function resetClassHistogram() {
       await refreshClassResults();
     } else {
       delete classResults[currentEndpointKey()];
+      delete classSubmissions[currentEndpointKey()];
       saveClassResults();
       drawClassHistogram();
+      updateClassCurveAction();
     }
     elements.raceStatus.textContent = "Class histogram reset for this endpoint";
   } catch (error) {
@@ -1000,6 +1133,7 @@ elements.showCycloid.addEventListener("change", render);
 elements.saveButton.addEventListener("click", saveTrial);
 elements.clearTrialsButton.addEventListener("click", clearSavedTrials);
 elements.submitClassButton.addEventListener("click", submitClassTimes);
+elements.loadClassCurvesButton.addEventListener("click", loadClassCurves);
 elements.resetClassButton.addEventListener("click", resetClassHistogram);
 elements.raceButton.addEventListener("click", runRace);
 elements.resetButton.addEventListener("click", resetCurve);
@@ -1022,4 +1156,5 @@ if (USING_SHARED_API) {
   elements.classStorageNote.textContent = `Shared through Cloudflare for session ${CLASS_SESSION_NAME}. Teacher reset is available in teacher mode.`;
 }
 render();
+updateClassCurveAction();
 refreshClassResults();

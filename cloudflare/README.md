@@ -11,7 +11,10 @@ Deployed API: <https://brachistochrone-class-api.villaa-physics.workers.dev>
 - `POST /api/sessions/:session/submissions`
 - `DELETE /api/sessions/:session/submissions?drop=2.0`
 
-POST bodies contain a vertical drop and an idempotent batch of `{ id, time }` submissions. DELETE
+POST bodies contain a vertical drop and an idempotent batch of
+`{ id, time, controlPoints }` submissions. GET returns both the histogram times and the stored curve
+control points, allowing the page to reconstruct and compare submitted paths. Records created before
+the curve-storage migration remain available in the histogram but cannot be drawn. DELETE
 requires `Authorization: Bearer <teacher token>`.
 
 ## First deployment

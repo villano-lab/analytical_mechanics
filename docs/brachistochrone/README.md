@@ -25,13 +25,16 @@ Then open <http://localhost:8000/brachistochrone/>.
 - Animate beads released simultaneously from rest.
 - Save trial curves, compare their times in a dot plot, and restore a curve by selecting its dot.
 - Match saved curves to their history dots with a stable color palette.
-- Batch-add only new saved trials to a browser-local class histogram, separated by vertical endpoint.
+- Batch-add only new saved trials to the shared class histogram, separated by vertical endpoint.
+- Load all reconstructable class submissions into the saved-trial workspace and compare their
+  shapes in distinct colors.
 - Clear personal saved trials without changing previously submitted class results.
 - Keep class-histogram bins fixed at 0.05 s and scroll horizontally to inspect outliers.
 - Open the page with `?teacher=1` to reveal the class-histogram reset control.
 
 The published page sends class results to the companion Cloudflare Worker configured in `config.js`,
-so submissions are shared across devices. Leaving `apiBaseUrl` empty restores browser-local fallback
+so both travel times and curve control points are shared across devices. Older submissions that contain
+only a travel time remain in the histogram but cannot be reconstructed as curves. Leaving `apiBaseUrl` empty restores browser-local fallback
 mode. Worker setup and deployment instructions are in
 [`../../cloudflare/README.md`](../../cloudflare/README.md).
 

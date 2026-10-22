@@ -46,12 +46,32 @@ function validTime(value) {
   return Number.isFinite(value) && value > 0 && value < 60;
 }
 
+function validControlPoints(value) {
+  if (!Array.isArray(value) || value.length !== 4) return false;
+  let previousX = 0;
+  return value.every((point) => {
+    const x = Number(point?.x);
+    const y = Number(point?.y);
+    const valid =
+      Number.isFinite(x) &&
+      Number.isFinite(y) &&
+      x > previousX &&
+      x < 1 &&
+      y >= 0.06 &&
+      y <= 1.62;
+    previousX = x;
+    return valid;
+  });
+}
+
 async function listSubmissions(request, env, endpoint) {
   const verticalDrop = Number(endpoint.url.searchParams.get("drop"));
   if (!validDrop(verticalDrop)) return json(request, { error: "Invalid vertical drop" }, 400);
 
   const result = await env.DB.prepare(
-    `SELECT travel_time AS travelTime
+    `SELECT submission_id AS submissionId,
+            travel_time AS travelTime,
+            control_points AS controlPoints
        FROM submissions
       WHERE session_name = ? AND vertical_drop = ?
       ORDER BY created_at, id`,
@@ -59,10 +79,28 @@ async function listSubmissions(request, env, endpoint) {
     .bind(endpoint.sessionName, verticalDrop)
     .all();
 
+  const submissions = result.results.map((row) => {
+    let controlPoints = null;
+    if (row.controlPoints) {
+      try {
+        const parsed = JSON.parse(row.controlPoints);
+        if (validControlPoints(parsed)) controlPoints = parsed;
+      } catch {
+        // Older or malformed records remain usable as histogram times.
+      }
+    }
+    return {
+      id: row.submissionId,
+      time: row.travelTime,
+      controlPoints,
+    };
+  });
+
   return json(request, {
     session: endpoint.sessionName,
     verticalDrop,
-    times: result.results.map((row) => row.travelTime),
+    times: submissions.map((submission) => submission.time),
+    submissions,
   });
 }
 
@@ -84,11 +122,14 @@ async function addSubmissions(request, env, endpoint) {
   const normalized = submissions.map((submission) => ({
     id: String(submission.id || ""),
     time: Number(submission.time),
+    controlPoints: submission.controlPoints,
   }));
   if (
     normalized.some(
       (submission) =>
-        !/^[a-zA-Z0-9_-]{8,100}$/.test(submission.id) || !validTime(submission.time),
+        !/^[a-zA-Z0-9_-]{8,100}$/.test(submission.id) ||
+        !validTime(submission.time) ||
+        !validControlPoints(submission.controlPoints),
     )
   ) {
     return json(request, { error: "One or more submissions are invalid" }, 400);
@@ -97,9 +138,15 @@ async function addSubmissions(request, env, endpoint) {
   const statements = normalized.map((submission) =>
     env.DB.prepare(
       `INSERT OR IGNORE INTO submissions
-        (session_name, vertical_drop, submission_id, travel_time)
-       VALUES (?, ?, ?, ?)`,
-    ).bind(endpoint.sessionName, verticalDrop, submission.id, submission.time),
+        (session_name, vertical_drop, submission_id, travel_time, control_points)
+       VALUES (?, ?, ?, ?, ?)`,
+    ).bind(
+      endpoint.sessionName,
+      verticalDrop,
+      submission.id,
+      submission.time,
+      JSON.stringify(submission.controlPoints),
+    ),
   );
   const results = await env.DB.batch(statements);
   const inserted = results.reduce((sum, result) => sum + Number(result.meta?.changes || 0), 0);

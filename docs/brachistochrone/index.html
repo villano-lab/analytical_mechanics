@@ -175,6 +175,9 @@
           </div>
           <div class="class-actions">
             <button id="submit-class-button" type="button" disabled>No new saved trials</button>
+            <button id="load-class-curves-button" class="secondary" type="button" disabled>
+              No class curves yet
+            </button>
             <button id="reset-class-button" class="danger" type="button" hidden>
               Reset class histogram
             </button>
@@ -241,7 +244,19 @@
       </form>
     </dialog>
 
+    <dialog id="load-class-curves-dialog" class="teacher-dialog">
+      <form method="dialog">
+        <p class="eyebrow">Class curves</p>
+        <h2>Replace saved trials?</h2>
+        <p id="load-class-curves-warning"></p>
+        <div class="teacher-dialog-actions">
+          <button class="secondary" type="submit" value="cancel">Cancel</button>
+          <button type="submit" value="confirm">Load class curves</button>
+        </div>
+      </form>
+    </dialog>
+
     <script src="./config.js"></script>
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20261022-curves"></script>
   </body>
 </html>

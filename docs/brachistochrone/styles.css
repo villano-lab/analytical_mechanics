@@ -404,6 +404,10 @@ input:focus-visible,
   opacity: 0.38;
 }
 
+.class-saved-track {
+  opacity: 0.32;
+}
+
 .cycloid-track {
   stroke: var(--cycloid);
 }
